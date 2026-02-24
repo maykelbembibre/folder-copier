@@ -22,13 +22,25 @@ public class FileManager {
 	
 	/**
 	 * Creates a file management object.
-	 * @param sourceDirectory The source directory.
-	 * @param destinationDirectory The destination directory.
 	 * @param option Options on how to deal with file name conflicts. Must not be <code>
 	 * null</code>.
 	 * @throws FileManagementException If something goes wrong.
 	 */
-	public FileManager(File sourceDirectory, File destinationDirectory, ConflictingFileOption option) throws FileManagementException {
+	public FileManager(ConflictingFileOption option) throws FileManagementException {
+		Objects.requireNonNull(option);
+		this.option = option;
+		this.fileOrderManager = new FileOrderManager();
+	}
+	
+	/**
+	 * Checks that the source and destination directories are correct or throws an
+	 * exception if they are not.
+	 * @param sourceDirectory The source directory.
+	 * @param destinationDirectory The destination directory.
+	 * @throws FileManagementException If the source or destination directories are
+	 * not correct.
+	 */
+	public static void checkDirectories(File sourceDirectory, File destinationDirectory) throws FileManagementException {
 		if (sourceDirectory == null) {
 			throw new FileManagementException("You must select a source folder.");
 		} else if (!sourceDirectory.isDirectory()) {
@@ -42,9 +54,7 @@ public class FileManager {
 		if (sourceDirectory.getAbsolutePath().equals(destinationDirectory.getAbsolutePath())) {
 			throw new FileManagementException("You cannot copy files to the same folder.");
 		}
-		Objects.requireNonNull(option);
-		this.option = option;
-		this.fileOrderManager = new FileOrderManager();
+		checkForDirectoryLoop(sourceDirectory, destinationDirectory);
 	}
 	
 	/**
@@ -58,14 +68,17 @@ public class FileManager {
 	}
 	
 	/**
-	 * Copies the given file to the given directory.
-	 * @param sourceFile A file.
-	 * @param destinationDirectory A directory.
+	 * Copies the given file to the given directory. Note that if a directory
+	 * already exists in the destination directory with the same name as the
+	 * file to copy, the file will be skipped. 
+	 * @param file The file to copy.
+	 * @param destinationDirectory The destination directory to copy the
+	 * file to.
 	 * @throws IOException If something goes wrong.
 	 */
-	public FileCopyResult copyFileToDirectory(File sourceFile, File destinationDirectory) throws IOException {
-		Path sourceFilePath = sourceFile.toPath();
-		File destinationFile = new File(destinationDirectory, sourceFile.getName());
+	public FileCopyResult copyFileToDirectory(File file, File destinationDirectory) throws IOException {
+		Path sourceFilePath = file.toPath();
+		File destinationFile = new File(destinationDirectory, file.getName());
 		Path destinationFilePath = destinationFile.toPath();
 		FileCopyResult result;
 		if (destinationFile.isDirectory()) {
@@ -85,7 +98,7 @@ public class FileManager {
 						result = FileCopyResult.OVERWRITTEN;
 						break;
 					case ConflictingFileOption.OVERWRITE_IF_NEWER:
-						if (sourceFile.lastModified() > destinationFile.lastModified()) {
+						if (file.lastModified() > destinationFile.lastModified()) {
 							result = FileCopyResult.OVERWRITTEN;
 						} else {
 							result = FileCopyResult.SKIPPED;
@@ -107,12 +120,16 @@ public class FileManager {
 	
 	/**
 	 * Creates the directory if it doesn't exist.
-	 * @param directory A directory.
+	 * @param directory A directory. Note that if this directory is really a file,
+	 * a directory with the same name can't be created so this method won't create
+	 * anything.
 	 * @return Whether the directory was created or it already existed.
 	 */
-	public static boolean createIfNotExists(File directory) {
+	public static boolean createDirectoryIfNotExists(File directory) {
 		boolean result;
-		if (directory.exists()) {
+		if (directory.isFile()) {
+			result = false;
+		} else if (directory.isDirectory()) {
 			result = true;
 		} else {
 			result = directory.mkdir();
@@ -128,6 +145,29 @@ public class FileManager {
 		File[] files = directory.listFiles();
 		if (files != null && files.length < 1) {
 			directory.delete();
+		}
+	}
+	
+	/**
+	 * This prevents a highly problematic loop error where an infinite directory
+	 * Hierarchy is copied to destinationSubdirectory.
+	 * @param sourceDirectory the source directory.
+	 * @param destinationDirectory the destination directory.
+	 * @throws FileManagementException If the destination subdirectory is
+	 * contained in the source subdirectory, that is, the user is trying
+	 * to copy a directory to a child directory of itself.
+	 */
+	private static void checkForDirectoryLoop(File sourceDirectory, File destinationDirectory)
+			throws FileManagementException {
+		Path sourceDirectoryPath = sourceDirectory.toPath();
+		Path destinationDirectoryPath = destinationDirectory.toPath();
+		if (destinationDirectoryPath.startsWith(sourceDirectoryPath)) {
+			throw new FileManagementException(
+				"A loop error has occurred because you've tried to copy the contents of the directory "
+				+ sourceDirectory.getAbsolutePath() + " into the directory "
+				+ destinationDirectory.getAbsolutePath()
+				+ ". Note that your request is absurd."
+			);
 		}
 	}
 	

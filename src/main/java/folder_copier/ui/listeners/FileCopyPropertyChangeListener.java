@@ -6,6 +6,7 @@ import java.beans.PropertyChangeListener;
 import javax.swing.JProgressBar;
 import javax.swing.JTextArea;
 
+import folder_copier.ui.models.FileCounters;
 import folder_copier.ui.workers.FileCopyTask;
 
 /**
@@ -34,22 +35,25 @@ public class FileCopyPropertyChangeListener implements PropertyChangeListener {
 
 	/**
 	 * Creates the status note text.
-	 * @param copiedFiles Number of copied files.
-	 * @param totalFiles Total number of files.
+	 * @param fileCounters The counters for the ongoing file operations.
 	 * @param progress Progress 0 - 100.
 	 * @return The status note text.
 	 */
-	public static String createStatusNoteText(
-		int copiedFiles, int totalFiles, 
-		int processedFiles, int totalFilesInDestination,
-		int progress
-	) {
+	public static String createStatusNoteText(FileCounters fileCounters, int progress) {
 		StringBuilder result = new StringBuilder();
-		if (totalFiles > 0) {
-			result.append("Copied " + copiedFiles + "/" + totalFiles + " files from source folder.\n");
+		if (fileCounters.getTotalFilesInSource() > 0) {
+			result.append(
+				"Copied " +
+				fileCounters.getCopiedFilesInSource() + "/" + fileCounters.getTotalFilesInSource() +
+				" files from source folder.\n"
+			);
 		}
-		if (totalFilesInDestination > 0) {
-			result.append("Processed " + processedFiles + "/" + totalFilesInDestination + " files in destination folder.\n");
+		if (fileCounters.getTotalFilesInDestination() > 0) {
+			result.append(
+				"Processed " +
+				fileCounters.getProcessedFilesInDestination() + "/" + fileCounters.getTotalFilesInDestination() +
+				" files in destination folder.\n"
+			);
 		}
 		result.append("Completed " + progress + "% of task.");
 		return result.toString();
@@ -62,16 +66,7 @@ public class FileCopyPropertyChangeListener implements PropertyChangeListener {
         if ("progress" == evt.getPropertyName()) {
             int progress = (Integer) evt.getNewValue();
             progressBar.setValue(progress);
-            int totalFiles = task.getTotalFilesInSource();
-            if (totalFiles > 0) {
-	            statusNote.setText(
-            		createStatusNoteText(
-            			task.getCopiedFilesInSource(), task.getTotalFilesInSource(),
-            			task.getProcessedFilesInDestination(), task.getTotalFilesInDestination(),
-            			task.getProgress()
-            		)
-	            );
-            }
+            statusNote.setText(createStatusNoteText(task.getFileCounters(), task.getProgress()));
         } 
     }
 }
