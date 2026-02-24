@@ -48,8 +48,11 @@ public class FileManager {
 		}
 		if (destinationDirectory == null) {
 			throw new FileManagementException("You must select a destination folder.");
-		} else if (!destinationDirectory.isDirectory()) {
-			throw new FileManagementException("The destination folder is not valid.");
+		} else {
+			destinationDirectory.mkdirs();
+			if (!destinationDirectory.isDirectory()) {
+				throw new FileManagementException("The destination folder is not valid.");
+			}
 		}
 		if (sourceDirectory.getAbsolutePath().equals(destinationDirectory.getAbsolutePath())) {
 			throw new FileManagementException("You cannot copy files to the same folder.");
