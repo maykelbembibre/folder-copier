@@ -72,7 +72,7 @@ public class AppWindow extends JFrame {
 		);
 		
 		//Set up the window.
-	    this.setTitle("Copy in order");
+	    this.setTitle("Folder copier");
 	    this.setMinimumSize(new Dimension(450, 350));
 	    this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	
