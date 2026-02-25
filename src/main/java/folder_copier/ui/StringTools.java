@@ -1,6 +1,6 @@
 package folder_copier.ui;
 
-import folder_copier.logic.models.FileCopyResult;
+import folder_copier.logic.models.FileCopyAction;
 
 /**
  * General String tools.
@@ -13,18 +13,18 @@ public class StringTools {
 	 * @param count The number of files that had that result.
 	 * @return A string.
 	 */
-    public static String printResult(FileCopyResult result, int count) {
+    public static String printResult(FileCopyAction result, int count) {
     	String message;
     	if (count > 0) {
     		String resultType;
     		switch (result) {
-    		case FileCopyResult.COPIED_WITH_NO_CONFLICT:
+    		case FileCopyAction.COPIED_WITH_NO_CONFLICT:
     			resultType = "created";
     			break;
-    		case FileCopyResult.SKIPPED:
+    		case FileCopyAction.SKIPPED:
     			resultType = "skipped";
     			break;
-    		case FileCopyResult.OVERWRITTEN:
+    		case FileCopyAction.OVERWRITTEN:
     			resultType = "overwritten";
     			break;
     		default:

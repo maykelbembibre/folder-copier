@@ -8,14 +8,14 @@ import java.util.Map;
  */
 public class FileCopyResults {
 
-	private final Map<FileCopyResult, Integer> results = new HashMap<>();
+	private final Map<FileCopyAction, Integer> results = new HashMap<>();
 	
 	/**
 	 * Returns the number of occurrences of the given result.
 	 * @param result The result.
 	 * @return The number of occurrences.
 	 */
-	public int get(FileCopyResult result) {
+	public int getNumberOfOccurrences(FileCopyAction result) {
 		Integer count = this.results.get(result);
 		if (count == null) {
 			count = 0;
@@ -27,7 +27,7 @@ public class FileCopyResults {
 	 * Adds an occurrence of a result.
 	 * @param result The result.
 	 */
-	public void add(FileCopyResult result) {
-		this.results.put(result, this.get(result) + 1);
+	public void add(FileCopyAction result) {
+		this.results.put(result, this.getNumberOfOccurrences(result) + 1);
 	}
 }

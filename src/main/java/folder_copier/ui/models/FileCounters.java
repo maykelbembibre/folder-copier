@@ -28,7 +28,7 @@ public class FileCounters {
 	 * @return The number of files in the source directory that have
 	 * already been copied.
 	 */
-	public int getCopiedFilesInSource() {
+	public int getNumberOfCopiedFilesInSource() {
 		return copiedFilesInSource;
 	}
 
@@ -42,12 +42,20 @@ public class FileCounters {
 	}
 
 	/**
+	 * Returns the total number of files in the source directory.
+	 * @return The total number of files in the source directory.
+	 */
+	public int getNumberOfTotalFilesInSource() {
+		return totalFilesInSource;
+	}
+	
+	/**
 	 * Returns the number of files in the destination directory that
 	 * have already been processed.
 	 * @return The number of files in the destination directory that
 	 * have already been processed.
 	 */
-	public int getProcessedFilesInDestination() {
+	public int getNumberOfProcessedFilesInDestination() {
 		return processedFilesInDestination;
 	}
 
@@ -61,18 +69,10 @@ public class FileCounters {
 	}
 
 	/**
-	 * Returns the total number of files in the source directory.
-	 * @return The total number of files in the source directory.
-	 */
-	public int getTotalFilesInSource() {
-		return totalFilesInSource;
-	}
-
-	/**
 	 * Returns the total number of files in the destination directory.
 	 * @return The total number of files in the destination directory.
 	 */
-	public int getTotalFilesInDestination() {
+	public int getNumberOfTotalFilesInDestination() {
 		return totalFilesInDestination;
 	}
 }

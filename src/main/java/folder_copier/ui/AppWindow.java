@@ -46,6 +46,7 @@ public class AppWindow extends JFrame {
 	
 	private static final long serialVersionUID = 2516782550252442192L;
 
+	public static final String APP_NAME = "Folder copier";
 	public final static int GAP = 10;
 	
 	private final PropertyManager properties;
@@ -72,7 +73,7 @@ public class AppWindow extends JFrame {
 		);
 		
 		//Set up the window.
-	    this.setTitle("Folder copier");
+	    this.setTitle(APP_NAME);
 	    this.setMinimumSize(new Dimension(450, 350));
 	    this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	

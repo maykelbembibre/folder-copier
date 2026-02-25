@@ -10,6 +10,7 @@ import java.util.Objects;
 
 import folder_copier.logic.exceptions.FileManagementException;
 import folder_copier.logic.models.ConflictingFileOption;
+import folder_copier.logic.models.FileCopyAction;
 import folder_copier.logic.models.FileCopyResult;
 
 /**
@@ -18,7 +19,6 @@ import folder_copier.logic.models.FileCopyResult;
 public class FileManager {
 
 	private final ConflictingFileOption option;
-	private final FileOrderManager fileOrderManager;
 	
 	/**
 	 * Creates a file management object.
@@ -29,7 +29,6 @@ public class FileManager {
 	public FileManager(ConflictingFileOption option) throws FileManagementException {
 		Objects.requireNonNull(option);
 		this.option = option;
-		this.fileOrderManager = new FileOrderManager();
 	}
 	
 	/**
@@ -66,8 +65,8 @@ public class FileManager {
 	 * @param directory A directory.
 	 * @return The list of filtered and ordered children.
 	 */
-	public List<File> getChildren(File directory) {
-		return this.fileOrderManager.getChildren(directory);
+	public static List<File> getChildren(File directory) {
+		return FileOrderManager.getChildren(directory);
 	}
 	
 	/**
@@ -83,28 +82,28 @@ public class FileManager {
 		Path sourceFilePath = file.toPath();
 		File destinationFile = new File(destinationDirectory, file.getName());
 		Path destinationFilePath = destinationFile.toPath();
-		FileCopyResult result;
+		FileCopyAction action;
 		if (destinationFile.isDirectory()) {
-			result = FileCopyResult.SKIPPED;
+			action = FileCopyAction.SKIPPED;
 		} else {
 			if (destinationFile.exists()) {
 				long sourceSize = getSize(sourceFilePath);
 				long destinationSize = getSize(destinationFilePath);
 				if (sourceSize > destinationSize) {
-					result = FileCopyResult.OVERWRITTEN;
+					action = FileCopyAction.OVERWRITTEN;
 				} else {
 					switch (this.option) {
 					case ConflictingFileOption.SKIP:
-						result = FileCopyResult.SKIPPED;
+						action = FileCopyAction.SKIPPED;
 						break;
 					case ConflictingFileOption.OVERWRITE:
-						result = FileCopyResult.OVERWRITTEN;
+						action = FileCopyAction.OVERWRITTEN;
 						break;
 					case ConflictingFileOption.OVERWRITE_IF_NEWER:
 						if (file.lastModified() > destinationFile.lastModified()) {
-							result = FileCopyResult.OVERWRITTEN;
+							action = FileCopyAction.OVERWRITTEN;
 						} else {
-							result = FileCopyResult.SKIPPED;
+							action = FileCopyAction.SKIPPED;
 						}
 						break;
 					default:
@@ -112,13 +111,13 @@ public class FileManager {
 					}
 				}
 			} else {
-				result = FileCopyResult.COPIED_WITH_NO_CONFLICT;
+				action = FileCopyAction.COPIED_WITH_NO_CONFLICT;
 			}
 		}
-		if (result.copy()) {
+		if (action.copy()) {
 			Files.copy(sourceFilePath, destinationFilePath, StandardCopyOption.REPLACE_EXISTING);
 		}
-		return result;
+		return new FileCopyResult(destinationFilePath, action);
 	}
 	
 	/**

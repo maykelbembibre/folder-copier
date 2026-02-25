@@ -22,8 +22,8 @@ public class FileOrderManager {
 	 * @param directory A directory.
 	 * @return The list of ordered children.
 	 */
-	public List<File> getChildren(File directory) {
-		List<ComparableFile> children = this.order(Arrays.asList(directory.listFiles()));
+	public static List<File> getChildren(File directory) {
+		List<ComparableFile> children = order(Arrays.asList(directory.listFiles()));
 		List<File> result = new ArrayList<>();
 		for (ComparableFile child : children) {
 			result.add(child.getFile());
@@ -36,7 +36,7 @@ public class FileOrderManager {
 	 * @param files Files.
 	 * @return The ordered list of files.
 	 */
-	private List<ComparableFile> order(Iterable<File> files) {
+	private static List<ComparableFile> order(Iterable<File> files) {
 		List<ComparableFile> result = new ArrayList<>();
 		if (files != null) {
 			for (File file : files) {

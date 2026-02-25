@@ -41,17 +41,17 @@ public class FileCopyPropertyChangeListener implements PropertyChangeListener {
 	 */
 	public static String createStatusNoteText(FileCounters fileCounters, int progress) {
 		StringBuilder result = new StringBuilder();
-		if (fileCounters.getTotalFilesInSource() > 0) {
+		if (fileCounters.getNumberOfTotalFilesInSource() > 0) {
 			result.append(
 				"Copied " +
-				fileCounters.getCopiedFilesInSource() + "/" + fileCounters.getTotalFilesInSource() +
+				fileCounters.getNumberOfCopiedFilesInSource() + "/" + fileCounters.getNumberOfTotalFilesInSource() +
 				" files from source folder.\n"
 			);
 		}
-		if (fileCounters.getTotalFilesInDestination() > 0) {
+		if (fileCounters.getNumberOfTotalFilesInDestination() > 0) {
 			result.append(
 				"Processed " +
-				fileCounters.getProcessedFilesInDestination() + "/" + fileCounters.getTotalFilesInDestination() +
+				fileCounters.getNumberOfProcessedFilesInDestination() + "/" + fileCounters.getNumberOfTotalFilesInDestination() +
 				" files in destination folder.\n"
 			);
 		}
