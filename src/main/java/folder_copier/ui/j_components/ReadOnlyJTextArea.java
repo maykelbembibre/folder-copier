@@ -22,4 +22,13 @@ public class ReadOnlyJTextArea extends JTextArea {
         this.setWrapStyleWord(true);
         this.setLineWrap(true);
 	}
+	
+	/**
+	 * Creates a new read-only {@link JTextArea} with the given text.
+	 * @param text The text.
+	 */
+	public ReadOnlyJTextArea(String text) {
+		this();
+		this.setText(text);
+	}
 }

@@ -6,11 +6,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystemException;
 import java.nio.file.Path;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -24,10 +21,10 @@ import folder_copier.logic.Logger;
 import folder_copier.logic.Tools;
 import folder_copier.logic.exceptions.FileManagementException;
 import folder_copier.logic.models.ConflictingFileOption;
-import folder_copier.logic.models.PathCollection;
 import folder_copier.logic.models.FileCopyAction;
 import folder_copier.logic.models.FileCopyResult;
 import folder_copier.logic.models.FileCopyResults;
+import folder_copier.logic.models.PathCollection;
 import folder_copier.ui.AppWindow;
 import folder_copier.ui.StringTools;
 import folder_copier.ui.listeners.FileCopyPropertyChangeListener;
@@ -39,8 +36,6 @@ import folder_copier.ui.models.FileCounters;
  */
 public class FileCopyTask extends SwingWorker<Void, Void> {
 
-	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("ss:mm:HH dd/MM/yyyy");
-	
 	private final File sourceDirectory;
 	private final File destinationDirectory;
 	private final JTextArea statusNote;
@@ -48,9 +43,9 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
 	private final Component stopButton;
 	private final ConflictingFileOption conflictingFileOption;
 	private final boolean deleteOrphanInDestination;
+	private final int copyFileProgressThreshold;
+	private final FileManager fileManagement;
 	private String error;
-	private FileManager fileManagement;
-	private int copyFileProgressThreshold;
 	private FileCounters fileCounters;
 	private FileCopyResults fileCopyResults;
 	private PathCollection deletedFilesInDestination;
@@ -72,13 +67,19 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
     	JTextArea statusNote, Collection<Component> sensitiveComponents,
     	Component stopButton, ConflictingFileOption conflictingFileOption, boolean deleteOrphanInDestination
     ) {
-    	this.conflictingFileOption = conflictingFileOption;
-    	this.deleteOrphanInDestination = deleteOrphanInDestination;
     	this.sourceDirectory = sourceDirectory;
     	this.destinationDirectory = destinationDirectory;
-		this.statusNote = statusNote;
-		this.sensitiveComponents = sensitiveComponents;
-		this.stopButton = stopButton;
+    	this.statusNote = statusNote;
+    	this.sensitiveComponents = sensitiveComponents;
+    	this.stopButton = stopButton;
+    	this.conflictingFileOption = conflictingFileOption;
+    	this.deleteOrphanInDestination = deleteOrphanInDestination;
+    	if (this.deleteOrphanInDestination) {
+			this.copyFileProgressThreshold = 75;
+		} else {
+			this.copyFileProgressThreshold = 100;
+		}
+		this.fileManagement = new FileManager(this.conflictingFileOption);
 	}
 
     /**
@@ -92,15 +93,7 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
     	try {
     		this.setProgress(0);
     		logger = new Logger(AppWindow.APP_NAME);
-    		logger.println("Folder copier execution on " + DATE_FORMAT.format(new Date()) + ".");
-    		logger.println("");
-    		if (this.deleteOrphanInDestination) {
-    			this.copyFileProgressThreshold = 75;
-    		} else {
-    			this.copyFileProgressThreshold = 100;
-    		}
     		this.statusNote.setText("Calculating data...");
-			this.fileManagement = new FileManager(this.conflictingFileOption);
 			FileManager.checkDirectories(sourceDirectory, destinationDirectory);
 			int totalFilesInDestination;
 			if (this.deleteOrphanInDestination) {
@@ -109,10 +102,10 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
 				totalFilesInDestination = 0;
 			}
 			this.fileCounters = new FileCounters(this.countFilesRecursively(this.sourceDirectory), totalFilesInDestination);
-			this.fileCopyResults = new FileCopyResults();
 			this.statusNote.setText(
 				FileCopyPropertyChangeListener.createStatusNoteText(this.fileCounters, this.getProgress())
 			);
+			this.fileCopyResults = new FileCopyResults();
 			this.copyRecursively(this.sourceDirectory, this.destinationDirectory);
 			this.deletedFilesInDestination = new PathCollection();
 			if (this.deleteOrphanInDestination) {

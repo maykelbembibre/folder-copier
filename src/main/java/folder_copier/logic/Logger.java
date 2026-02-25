@@ -15,6 +15,7 @@ import java.util.Date;
 public class Logger implements Closeable {
 
 	private static final int MAX_LOGS = 1000000;
+	private static final DateFormat USER_FRIENDLY_DATE_FORMAT = new SimpleDateFormat("ss:mm:HH dd/MM/yyyy");
 	private static final DateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
 	
 	private final PrintWriter printWriter;
@@ -28,6 +29,8 @@ public class Logger implements Closeable {
 		File file = this.getNewFile(name);
 		FileWriter fileWriter = new FileWriter(file);
 		this.printWriter = new PrintWriter(fileWriter);
+		this.println(name + " execution on " + USER_FRIENDLY_DATE_FORMAT.format(new Date()) + ".");
+		this.println("");
 	}
 	
 	/**

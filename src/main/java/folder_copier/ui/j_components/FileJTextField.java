@@ -47,6 +47,7 @@ public class FileJTextField extends PropertyBackedJTextField {
 				    if (currentVal != null) {
 				    	this.lastValue = currentVal;
 				    }
+				    doAfterCaretUpdate();
 			    }
 			}
 		});
@@ -67,4 +68,10 @@ public class FileJTextField extends PropertyBackedJTextField {
 	public void setSelectedFile(File selectedFile) {
 		this.setText(selectedFile.getAbsolutePath());
 	}
+	
+	/**
+	 * Logic executed after a caret update (when the text of this text
+	 * field changes).
+	 */
+	protected void doAfterCaretUpdate() {}
 }

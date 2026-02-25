@@ -14,8 +14,10 @@ import javax.swing.JProgressBar;
 import javax.swing.JTextArea;
 
 import folder_copier.ui.AppWindow;
+import folder_copier.ui.Tools;
 import folder_copier.ui.j_components.FileJTextField;
 import folder_copier.ui.listeners.FileCopyPropertyChangeListener;
+import folder_copier.ui.models.Status;
 import folder_copier.ui.workers.FileCopyTask;
 
 /**
@@ -45,30 +47,35 @@ public class StartJButton extends JButton {
 		this.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				File sourceDirectory = sourceFileTextField.getSelectedFile();
-				File destinationDirectory = destinationFileTextField.getSelectedFile();
-				
-				progressBar.setValue(0);
-		    	taskOutput.setText("");
-		    	for (Component component : sensitiveComponents) {
-		    		component.setEnabled(false);
-		    	}
-		        
-		        //Instances of javax.swing.SwingWorker are not reusuable, so
-		        //we create new instances as needed.
-		    	FileCopyTask task = new FileCopyTask(
-		        	sourceDirectory, destinationDirectory, taskOutput, sensitiveComponents, stopButton,
-		        	appWindow.getConflictingFileOption(), appWindow.deleteOrphanInDestination()
-		        );
-		        PropertyChangeListener propertyChangeListener = new FileCopyPropertyChangeListener(
-	            	progressBar, taskOutput, task
-	            );
-		        task.addPropertyChangeListener(propertyChangeListener);
-		        appWindow.setTask(task);
-		        task.execute();
-		        
-		        // After a task starts, the user has the possibility of stopping it.
-		        stopButton.setEnabled(true);
+				boolean goOn;
+				if (appWindow.getStatus() == Status.FOLDERS_NOT_EQUAL) {
+					goOn = Tools.showConfirmationDialog(appWindow, "The selected folders have different names. Copying the files can lead to unexpected results or even undesired data loss. Are you sure you want to go on?");
+				} else {
+					goOn = true;
+				}
+				if (goOn) {
+					progressBar.setValue(0);
+			    	taskOutput.setText("");
+			    	Tools.setEnabled(sensitiveComponents, false);
+			        
+			    	File sourceDirectory = sourceFileTextField.getSelectedFile();
+					File destinationDirectory = destinationFileTextField.getSelectedFile();
+			        //Instances of javax.swing.SwingWorker are not reusuable, so
+			        //we create new instances as needed.
+			    	FileCopyTask task = new FileCopyTask(
+			        	sourceDirectory, destinationDirectory, taskOutput, sensitiveComponents, stopButton,
+			        	appWindow.getConflictingFileOption(), appWindow.deleteOrphanInDestination()
+			        );
+			        PropertyChangeListener propertyChangeListener = new FileCopyPropertyChangeListener(
+		            	progressBar, taskOutput, task
+		            );
+			        task.addPropertyChangeListener(propertyChangeListener);
+			        appWindow.setTask(task);
+			        task.execute();
+			        
+			        // After a task starts, the user has the possibility of stopping it.
+			        stopButton.setEnabled(true);
+				}
 			}
 		});
 	}

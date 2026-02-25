@@ -28,8 +28,10 @@ import folder_copier.ui.j_components.DirectoryChooser;
 import folder_copier.ui.j_components.FileJTextField;
 import folder_copier.ui.j_components.HorizontalSeparator;
 import folder_copier.ui.j_components.PropertyBackedJCheckBox;
-import folder_copier.ui.panels.FileCopyOptionJPanel;
+import folder_copier.ui.j_components.StatusAwareFileJTextField;
+import folder_copier.ui.models.Status;
 import folder_copier.ui.panels.FileCopyJPanel;
+import folder_copier.ui.panels.FileCopyOptionJPanel;
 import folder_copier.ui.panels.StatusJPanel;
 import folder_copier.ui.workers.FileCopyTask;
 
@@ -53,6 +55,7 @@ public class AppWindow extends JFrame {
 	private JButton destinationFileChooseButton;
 	private FileCopyTask task;
 	private FileCopyOptionJPanel fileCopyOptionPanel;
+	private StatusJPanel statusPanel;
 	
 	/**
 	 * Creates the window.
@@ -141,12 +144,37 @@ public class AppWindow extends JFrame {
 		return this.deleteOrphanInDestinationJCheckBox.isSelected();
 	}
 	
+	/**
+	 * Returns the status of the status panel of this window.
+	 * @return The status.
+	 */
+	public Status getStatus() {
+		return this.statusPanel.getStatus();
+	}
+	
+	/**
+	 * Updates the status panel of this window.
+	 */
+	public void updateStatus() {
+		File a = this.sourceFileTextField.getSelectedFile();
+		File b = this.destinationFileTextField.getSelectedFile();
+		if (a == null || b == null) {
+			this.statusPanel.setStatus(Status.FOLDERS_NOT_SELECTED);
+		} else {
+			if (a.getName().equals(b.getName())) {
+				this.statusPanel.setStatus(Status.FOLDERS_EQUAL);
+			} else {
+				this.statusPanel.setStatus(Status.FOLDERS_NOT_EQUAL);
+			}
+		}
+	}
+	
 	private static void adjustTextField(JTextField jTextField) {
 		jTextField.setMaximumSize(new Dimension(Integer.MAX_VALUE, jTextField.getPreferredSize().height));
 	}
 	
 	private FileJTextField createJFileTextField(String propertyKey) {
-		FileJTextField jFileTextField = new FileJTextField(this.properties, propertyKey);
+		FileJTextField jFileTextField = new StatusAwareFileJTextField(this, this.properties, propertyKey);
 		adjustTextField(jFileTextField);
 		return jFileTextField;
 	}
@@ -220,7 +248,8 @@ public class AppWindow extends JFrame {
 		verticalPanel.add(fileCopyPanel);
 		this.contentPane.add(verticalPanel, BorderLayout.CENTER);
 		
-		StatusJPanel statusPanel = new StatusJPanel();
-		this.contentPane.add(statusPanel, BorderLayout.SOUTH);
+		this.statusPanel = new StatusJPanel();
+		this.updateStatus();
+		this.contentPane.add(this.statusPanel, BorderLayout.SOUTH);
 	}
 }

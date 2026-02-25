@@ -24,9 +24,8 @@ public class FileManager {
 	 * Creates a file management object.
 	 * @param option Options on how to deal with file name conflicts. Must not be <code>
 	 * null</code>.
-	 * @throws FileManagementException If something goes wrong.
 	 */
-	public FileManager(ConflictingFileOption option) throws FileManagementException {
+	public FileManager(ConflictingFileOption option) {
 		Objects.requireNonNull(option);
 		this.option = option;
 	}
