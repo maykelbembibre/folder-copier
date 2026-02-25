@@ -122,10 +122,14 @@ public class FileManager {
 	
 	/**
 	 * Creates the directory if it doesn't exist.
-	 * @param directory A directory. Note that if this directory is really a file,
-	 * a directory with the same name can't be created so this method won't create
-	 * anything.
-	 * @return Whether the directory was created or it already existed.
+	 * 
+	 * @param directory A directory. Note that if this directory is really a file, a
+	 *                  directory with the same name can't be created so this method
+	 *                  won't create anything.
+	 * @return <code>true</code> if the directory has been created or if it already
+	 *         existed. <code>False</code> if the directory couldn't be created
+	 *         (i.e. file system permission denial or the given directory is in fact
+	 *         a file and thus cannot be created as a directory).
 	 */
 	public static boolean createDirectoryIfNotExists(File directory) {
 		boolean result;

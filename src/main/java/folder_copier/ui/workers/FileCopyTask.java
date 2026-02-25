@@ -6,8 +6,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystemException;
 import java.nio.file.Path;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -18,8 +21,10 @@ import org.apache.commons.io.FileUtils;
 
 import folder_copier.logic.FileManager;
 import folder_copier.logic.Logger;
+import folder_copier.logic.Tools;
 import folder_copier.logic.exceptions.FileManagementException;
 import folder_copier.logic.models.ConflictingFileOption;
+import folder_copier.logic.models.PathCollection;
 import folder_copier.logic.models.FileCopyAction;
 import folder_copier.logic.models.FileCopyResult;
 import folder_copier.logic.models.FileCopyResults;
@@ -34,6 +39,8 @@ import folder_copier.ui.models.FileCounters;
  */
 public class FileCopyTask extends SwingWorker<Void, Void> {
 
+	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("ss:mm:HH dd/MM/yyyy");
+	
 	private final File sourceDirectory;
 	private final File destinationDirectory;
 	private final JTextArea statusNote;
@@ -46,8 +53,7 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
 	private int copyFileProgressThreshold;
 	private FileCounters fileCounters;
 	private FileCopyResults fileCopyResults;
-	private int deletedFilesInDestination;
-	private Logger logger;
+	private PathCollection deletedFilesInDestination;
 	
 	/**
 	 * Constructor.
@@ -82,10 +88,12 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
      */
     @Override
     public Void doInBackground() {
-    	this.logger = null;
+    	Logger logger = null;
     	try {
     		this.setProgress(0);
-    		this.logger = new Logger(AppWindow.APP_NAME);
+    		logger = new Logger(AppWindow.APP_NAME);
+    		logger.println("Folder copier execution on " + DATE_FORMAT.format(new Date()) + ".");
+    		logger.println("");
     		if (this.deleteOrphanInDestination) {
     			this.copyFileProgressThreshold = 75;
     		} else {
@@ -106,9 +114,13 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
 				FileCopyPropertyChangeListener.createStatusNoteText(this.fileCounters, this.getProgress())
 			);
 			this.copyRecursively(this.sourceDirectory, this.destinationDirectory);
+			this.deletedFilesInDestination = new PathCollection();
 			if (this.deleteOrphanInDestination) {
 				this.deleteOrphansRecursively(this.sourceDirectory, this.destinationDirectory);
 			}
+			this.logResults(logger);
+			logger.println("Files or folders that have been deleted from the destination folder:");
+			Tools.logFilesAndDirectories(logger, deletedFilesInDestination);
 		} catch (FileManagementException e) {
 			this.error(e.getMessage());
 		} catch (FileSystemException e) {
@@ -118,7 +130,7 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
 			this.error("OS file system error.");
 		} finally {
 			try {
-				this.logger.close();
+				logger.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -155,7 +167,7 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
         } else {
         	String deletedPart;
         	if (this.deleteOrphanInDestination) {
-        		deletedPart = "Files deleted from the destination folder: " + this.deletedFilesInDestination + ".";
+        		deletedPart = "Files deleted from the destination folder: " + this.deletedFilesInDestination.getFilePaths().size() + ".";
         	} else {
         		deletedPart = "";
         	}
@@ -178,6 +190,19 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
     	return builder.toString();
     }
 	
+    private void logResult(Logger logger, FileCopyAction action) {
+    	PathCollection affectedFiles;
+		logger.println(StringTools.printResultTitle(action));
+		affectedFiles = this.fileCopyResults.getAffectedFiles(action);
+		Tools.logFiles(logger, affectedFiles);
+		logger.println("");
+    }
+    
+    private void logResults(Logger logger) {
+    	this.logResult(logger, FileCopyAction.COPIED_WITH_NO_CONFLICT);
+    	this.logResult(logger, FileCopyAction.OVERWRITTEN);
+    }
+    
 	private int countFilesRecursively(File directory) {
 		Iterator<File> children = FileManager.getChildren(directory).iterator();
 		File fromFolderChild;
@@ -222,8 +247,7 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
     		sourceSubdirectoryChild = sourceSubdirectoryChildren.next();
     		if (sourceSubdirectoryChild.isFile()) {
     			FileCopyResult result = this.fileManagement.copyFileToDirectory(sourceSubdirectoryChild, destinationSubdirectory);
-    			FileCopyAction action = result.getAction();
-    			this.fileCopyResults.add(action);
+    			this.fileCopyResults.add(result);
     			this.fileCounters.addCopiedFilesInSource(1);
     			this.setProgress(this.calculateCopyProgress());
     		} else {
@@ -231,11 +255,11 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
 				if (FileManager.createDirectoryIfNotExists(destinationSubdirectoryChild)) {
 					this.copyRecursively(sourceSubdirectoryChild, destinationSubdirectoryChild);
 				} else {
-					int fileCount = countFilesRecursively(sourceSubdirectoryChild);
+					List<Path> files = this.getFilesRecursively(sourceSubdirectoryChild);
+					int fileCount = files.size();
 					this.fileCounters.addCopiedFilesInSource(fileCount);
-					int i;
-					for (i = 1;i <= fileCount;i++) {
-						this.fileCopyResults.add(FileCopyAction.SKIPPED);
+					for (Path file : files) {
+						this.fileCopyResults.add(new FileCopyResult(file, FileCopyAction.SKIPPED));
 					}
 					this.setProgress(this.calculateCopyProgress());
 				}
@@ -261,18 +285,23 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
 			sourceSubdirectoryChild = new File(sourceSubirectory, destinationSubdirectoryChild.getName());
 			if (destinationSubdirectoryChild.isFile()) {
 				if (!sourceSubdirectoryChild.isFile()) {
+					this.deletedFilesInDestination.addPath(destinationSubdirectoryChild.toPath());
 					destinationSubdirectoryChild.delete();
-					this.deletedFilesInDestination++;
 				}
 				this.fileCounters.addProcessedFilesInDestination(1);
 				this.setProgress(calculateDeleteOrphansProgress());
 			} else {
 				if (sourceSubdirectoryChild.isFile() || !sourceSubdirectoryChild.exists()) {
-					int fileCount = this.countFilesRecursively(destinationSubdirectoryChild);
 					List<Path> files = this.getFilesRecursively(destinationSubdirectoryChild);
-					FileUtils.deleteDirectory(destinationSubdirectoryChild);
+					int fileCount = files.size();
 					this.fileCounters.addProcessedFilesInDestination(fileCount);
-					this.deletedFilesInDestination += fileCount;
+					for (Path file : files) {
+						this.deletedFilesInDestination.addPath(file);
+					}
+					if (files.isEmpty()) {
+						this.deletedFilesInDestination.addPath(destinationSubdirectoryChild.toPath());
+					}
+					FileUtils.deleteDirectory(destinationSubdirectoryChild);
 					this.setProgress(calculateDeleteOrphansProgress());
 				} else {
 					this.deleteOrphansRecursively(sourceSubdirectoryChild, destinationSubdirectoryChild);

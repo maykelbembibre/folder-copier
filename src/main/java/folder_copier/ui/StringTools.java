@@ -41,4 +41,34 @@ public class StringTools {
     	}
     	return message;
     }
+    
+    /**
+     * Prints a title suitable for the given file copy action.
+     * @param action A file copy action.
+     * @return The title.
+     */
+    public static String printResultTitle(FileCopyAction action) {
+    	String title;
+		String resultType;
+		switch (action) {
+		case FileCopyAction.COPIED_WITH_NO_CONFLICT:
+			resultType = "created";
+			break;
+		case FileCopyAction.SKIPPED:
+			resultType = "skipped";
+			break;
+		case FileCopyAction.OVERWRITTEN:
+			resultType = "overwritten";
+			break;
+		default:
+			resultType = null;
+			break;
+		}
+		if (resultType == null) {
+			title = "";
+		} else {
+			title = "Files that have been " + resultType + ":";
+		}
+    	return title;
+    }
 }
