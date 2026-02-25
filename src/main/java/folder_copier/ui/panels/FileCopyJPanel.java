@@ -1,4 +1,4 @@
-package folder_copier.ui.j_components;
+package folder_copier.ui.panels;
 
 import java.awt.Dimension;
 import java.awt.Insets;
@@ -15,14 +15,15 @@ import javax.swing.JTextArea;
 
 import folder_copier.ui.AppWindow;
 import folder_copier.ui.Tools;
+import folder_copier.ui.j_components.ReadOnlyJTextArea;
 import folder_copier.ui.j_components.buttons.StartJButton;
 import folder_copier.ui.j_components.buttons.StopJButton;
 
-public class FileCopyPanel extends JPanel {
+public class FileCopyJPanel extends JPanel {
 
 	private static final long serialVersionUID = -9050427655895759444L;
 
-	public FileCopyPanel(AppWindow appWindow) {
+	public FileCopyJPanel(AppWindow appWindow) {
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		
 		JProgressBar progressBar = new JProgressBar(0, 100);

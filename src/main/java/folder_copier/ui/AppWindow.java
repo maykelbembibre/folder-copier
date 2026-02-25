@@ -25,12 +25,12 @@ import javax.swing.JTextField;
 import folder_copier.logic.PropertyManager;
 import folder_copier.logic.models.ConflictingFileOption;
 import folder_copier.ui.j_components.DirectoryChooser;
-import folder_copier.ui.j_components.FileCopyOptionJPanel;
-import folder_copier.ui.j_components.FileCopyPanel;
 import folder_copier.ui.j_components.FileJTextField;
 import folder_copier.ui.j_components.HorizontalSeparator;
 import folder_copier.ui.j_components.PropertyBackedJCheckBox;
-import folder_copier.ui.j_components.StatusPanel;
+import folder_copier.ui.panels.FileCopyOptionJPanel;
+import folder_copier.ui.panels.FileCopyJPanel;
+import folder_copier.ui.panels.StatusJPanel;
 import folder_copier.ui.workers.FileCopyTask;
 
 /**
@@ -213,14 +213,14 @@ public class AppWindow extends JFrame {
 		verticalPanel.add(otherOptionsJPanel);
         verticalPanel.add(new HorizontalSeparator());
 		
-		JPanel fileCopyPanel = new FileCopyPanel(this);
+		JPanel fileCopyPanel = new FileCopyJPanel(this);
 		// Necessary so the components in the vertical panel align horizontally the same way.
 		fileCopyPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		
 		verticalPanel.add(fileCopyPanel);
 		this.contentPane.add(verticalPanel, BorderLayout.CENTER);
 		
-		StatusPanel statusPanel = new StatusPanel();
+		StatusJPanel statusPanel = new StatusJPanel();
 		this.contentPane.add(statusPanel, BorderLayout.SOUTH);
 	}
 }

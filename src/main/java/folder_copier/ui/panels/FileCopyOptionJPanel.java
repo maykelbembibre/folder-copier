@@ -1,4 +1,4 @@
-package folder_copier.ui.j_components;
+package folder_copier.ui.panels;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -11,6 +11,7 @@ import javax.swing.JRadioButton;
 
 import folder_copier.logic.PropertyManager;
 import folder_copier.logic.models.ConflictingFileOption;
+import folder_copier.ui.j_components.PropertyBackedButtonGroup;
 
 /**
  * A {@link JPanel} with file copy options.
