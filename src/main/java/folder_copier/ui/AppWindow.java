@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -15,28 +14,23 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuBar;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import folder_copier.logic.PropertyManager;
 import folder_copier.logic.models.ConflictingFileOption;
 import folder_copier.ui.j_components.DirectoryChooser;
 import folder_copier.ui.j_components.FileCopyOptionJPanel;
+import folder_copier.ui.j_components.FileCopyPanel;
 import folder_copier.ui.j_components.FileJTextField;
 import folder_copier.ui.j_components.HorizontalSeparator;
 import folder_copier.ui.j_components.PropertyBackedJCheckBox;
-import folder_copier.ui.j_components.ReadOnlyJTextArea;
-import folder_copier.ui.j_components.buttons.StartJButton;
-import folder_copier.ui.j_components.buttons.StopJButton;
+import folder_copier.ui.j_components.StatusPanel;
 import folder_copier.ui.workers.FileCopyTask;
 
 /**
@@ -194,46 +188,6 @@ public class AppWindow extends JFrame {
 		return selectDirectoryButton;
 	}
 	
-	private JPanel drawFileCopyPanel() {
-		JPanel fileCopyPanel = new JPanel();
-		fileCopyPanel.setLayout(new BoxLayout(fileCopyPanel, BoxLayout.Y_AXIS));
-		
-		JProgressBar progressBar = new JProgressBar(0, 100);
-        progressBar.setValue(0);
-        progressBar.setStringPainted(true);
-        JTextArea taskOutput = new ReadOnlyJTextArea();
-		JButton stopButton = new StopJButton(this);
-		JButton startButton = new StartJButton(this, progressBar, taskOutput, stopButton);
-        
-        JPanel horizontalPanel = new JPanel();
-        BoxLayout horizontalLayout = new BoxLayout(horizontalPanel, BoxLayout.X_AXIS);
-        horizontalPanel.setBorder(BorderFactory.createEmptyBorder(GAP, GAP, GAP, GAP));
-        horizontalPanel.setLayout(horizontalLayout);
-        horizontalPanel.add(startButton);
-        horizontalPanel.add(Box.createRigidArea(new Dimension(GAP, 0)));
-        horizontalPanel.add(stopButton);
-        horizontalPanel.add(Box.createRigidArea(new Dimension(GAP, 0)));
-        horizontalPanel.add(progressBar);
-        
-        fileCopyPanel.add(horizontalPanel);
-        JComponent scrollableTaskOutput = new JScrollPane(taskOutput);
-        scrollableTaskOutput.setBorder(
-        	BorderFactory.createCompoundBorder(
-    			BorderFactory.createEmptyBorder(0, GAP, GAP, GAP),
-        		scrollableTaskOutput.getBorder()
-        	)
-        );
-        
-        // Make the scroll pane want to be at least as big as the text area.
-        Insets scrollableTaskOutputInsets = scrollableTaskOutput.getInsets();
-        Dimension taskOutputPreferredSize = taskOutput.getPreferredSize();
-        scrollableTaskOutput.setPreferredSize(Tools.add(taskOutputPreferredSize, scrollableTaskOutputInsets));
-        
-        fileCopyPanel.add(scrollableTaskOutput);
-        
-        return fileCopyPanel;
-	}
-	
 	private void drawContentPane() {
 		JPanel verticalPanel = new JPanel();
 		verticalPanel.setLayout(new BoxLayout(verticalPanel, BoxLayout.Y_AXIS));
@@ -259,11 +213,14 @@ public class AppWindow extends JFrame {
 		verticalPanel.add(otherOptionsJPanel);
         verticalPanel.add(new HorizontalSeparator());
 		
-		JPanel fileCopyPanel = drawFileCopyPanel();
+		JPanel fileCopyPanel = new FileCopyPanel(this);
 		// Necessary so the components in the vertical panel align horizontally the same way.
 		fileCopyPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		
 		verticalPanel.add(fileCopyPanel);
 		this.contentPane.add(verticalPanel, BorderLayout.CENTER);
+		
+		StatusPanel statusPanel = new StatusPanel();
+		this.contentPane.add(statusPanel, BorderLayout.SOUTH);
 	}
 }
