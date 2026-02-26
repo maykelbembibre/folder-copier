@@ -39,8 +39,8 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
 	private final Collection<Component> sensitiveComponents;
 	private final Component stopButton;
 	private final ConflictingFileOption conflictingFileOption;
-	private final int progressThreshold;
 	private final FileManager fileManager;
+	private final int progressThreshold;
 	private final FileCopyResults fileCopyResults;
 	private final PathCollection deletedFilesInDestination;
 	private FileCounters fileCounters;
@@ -68,6 +68,8 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
     	this.sensitiveComponents = sensitiveComponents;
     	this.stopButton = stopButton;
     	this.conflictingFileOption = conflictingFileOption;
+    	this.fileManager = new FileManager(this.conflictingFileOption);
+    	this.fileCopyResults = new FileCopyResults();
     	if (deleteOrphanInDestination) {
 			this.progressThreshold = 75;
 			this.deletedFilesInDestination = new PathCollection();
@@ -75,8 +77,6 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
 			this.progressThreshold = 100;
 			this.deletedFilesInDestination = null;
 		}
-    	this.fileManager = new FileManager(this.conflictingFileOption);
-    	this.fileCopyResults = new FileCopyResults();
 	}
 
     /**
@@ -252,7 +252,7 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
 	
 	private void deleteRecursively(File sourceSubirectory, File destinationSubdirectory) throws IOException {
 		Iterator<File> destinationDirectoryChildren = FileManager.getChildren(destinationSubdirectory).iterator();
-		File destinationSubdirectoryChild, sourceSubdirectoryChild;
+		File sourceSubdirectoryChild, destinationSubdirectoryChild;
 		while (!this.isCancelled() && destinationDirectoryChildren.hasNext()) {
 			destinationSubdirectoryChild = destinationDirectoryChildren.next();
 			sourceSubdirectoryChild = new File(sourceSubirectory, destinationSubdirectoryChild.getName());
