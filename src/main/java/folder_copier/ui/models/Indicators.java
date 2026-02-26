@@ -74,14 +74,18 @@ public class Indicators {
 	}
 	
 	/**
+	 * Adds one processed file in the destination directory.
+	 */
+	public void addProcessedFileInDestination() {
+		this.fileCounters.addProcessedFilesInDestination(1);
+	}
+	
+	/**
 	 * Adds a deleted file to this instance.
 	 * @param deletedFile The deleted file.
 	 */
 	public void addDeletedFile(File deletedFile) {
-		this.fileCounters.addProcessedFilesInDestination(1);
-		if (!deletedFile.isFile()) {
-			this.deletedFilesInDestination.addPath(deletedFile.toPath());
-		}
+		this.deletedFilesInDestination.addPath(deletedFile.toPath());
 	}
 	
 	/**

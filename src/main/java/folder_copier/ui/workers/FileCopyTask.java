@@ -221,10 +221,11 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
 			dstSubdireChild = dstSubdirChildren.next();
 			srcSubdirChild = new File(srcSubdir, dstSubdireChild.getName());
 			if (dstSubdireChild.isFile()) {
+				this.indicators.addProcessedFileInDestination();
 				if (!srcSubdirChild.isFile()) {
+					this.indicators.addDeletedFile(dstSubdireChild);
 					dstSubdireChild.delete();
 				}
-				this.indicators.addDeletedFile(dstSubdireChild);
 				this.publishAll(this.progressCalculator.calculateDeleteProgress(this.indicators.getFileCounters()));
 			} else {
 				if (srcSubdirChild.isDirectory()) {
