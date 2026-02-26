@@ -40,7 +40,7 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
 	private final Component stopButton;
 	private final ConflictingFileOption conflictingFileOption;
 	private final FileManager fileManager;
-	private final int progressThreshold;
+	private final ProgressCalculator progressCalculator;
 	private final FileCopyResults fileCopyResults;
 	private final PathCollection deletedFilesInDestination;
 	private FileCounters fileCounters;
@@ -71,10 +71,10 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
     	this.fileManager = new FileManager(this.conflictingFileOption);
     	this.fileCopyResults = new FileCopyResults();
     	if (deleteOrphanInDestination) {
-			this.progressThreshold = 75;
+			this.progressCalculator = new ProgressCalculator(75);
 			this.deletedFilesInDestination = new PathCollection();
 		} else {
-			this.progressThreshold = 100;
+			this.progressCalculator = new ProgressCalculator(100);
 			this.deletedFilesInDestination = null;
 		}
 	}
@@ -193,13 +193,6 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
 		return result;
 	}
 	
-	private int calculateCopyProgress() {
-		return Math.min(
-			this.fileCounters.getNumberOfProcessedFilesInSource() * this.progressThreshold / this.fileCounters.getNumberOfTotalFilesInSource(),
-			this.progressThreshold
-		);
-	}
-	
 	private void copyRecursively(File sourceSubdirectory, File destinationSubdirectory) throws IOException, FileManagementException {
 		Iterator<File> sourceSubdirectoryChildren = FileManager.getChildren(sourceSubdirectory).iterator();
 		File sourceSubdirectoryChild;
@@ -209,7 +202,7 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
     			FileCopyResult result = this.fileManager.copyFileToDirectory(sourceSubdirectoryChild, destinationSubdirectory);
     			this.fileCounters.addProcessedFilesInSource(1);
     			this.fileCopyResults.add(result);
-    			this.publishAll(this.calculateCopyProgress());
+    			this.publishAll(this.progressCalculator.calculateCopyProgress(this.fileCounters));
     		} else {
     			File destinationSubdirectoryChild = new File(destinationSubdirectory, sourceSubdirectoryChild.getName());
 				if (FileManager.createDirectoryIfNotExists(destinationSubdirectoryChild)) {
@@ -218,20 +211,12 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
 					List<Path> files = this.getFilesRecursively(sourceSubdirectoryChild);
 					this.fileCounters.addProcessedFilesInSource(files.size());
 					this.fileCopyResults.addMany(files, FileCopyAction.SKIPPED);
-					this.publishAll(this.calculateCopyProgress());
+					this.publishAll(this.progressCalculator.calculateCopyProgress(this.fileCounters));
 				}
     		}
     	}
     }
-	
-	private int calculateDeleteProgress() {
-		return Math.min(
-			this.progressThreshold + this.fileCounters.getNumberOfProcessedFilesInDestination() *
-			(100 - this.progressThreshold) / this.fileCounters.getNumberOfTotalFilesInDestination(),
-			100
-		);
-	}
-	
+
 	private void deleteRecursively(File sourceSubirectory, File destinationSubdirectory) throws IOException {
 		Iterator<File> destinationDirectoryChildren = FileManager.getChildren(destinationSubdirectory).iterator();
 		File sourceSubdirectoryChild, destinationSubdirectoryChild;
@@ -244,7 +229,7 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
 					this.deletedFilesInDestination.addPath(destinationSubdirectoryChild.toPath());
 					destinationSubdirectoryChild.delete();
 				}
-				this.publishAll(calculateDeleteProgress());
+				this.publishAll(this.progressCalculator.calculateDeleteProgress(this.fileCounters));
 			} else {
 				if (sourceSubdirectoryChild.isDirectory()) {
 					this.deleteRecursively(sourceSubdirectoryChild, destinationSubdirectoryChild);
@@ -254,7 +239,7 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
 					this.deletedFilesInDestination.addPaths(files);
 					this.deletedFilesInDestination.addPath(destinationSubdirectoryChild.toPath());
 					FileUtils.deleteDirectory(destinationSubdirectoryChild);
-					this.publishAll(calculateDeleteProgress());
+					this.publishAll(this.progressCalculator.calculateDeleteProgress(this.fileCounters));
 				}
 			}
 		}
