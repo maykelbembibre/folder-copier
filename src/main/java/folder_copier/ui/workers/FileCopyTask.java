@@ -25,15 +25,13 @@ import folder_copier.logic.models.FileCopyResult;
 import folder_copier.logic.models.FileCopyResults;
 import folder_copier.logic.models.PathCollection;
 import folder_copier.ui.AppWindow;
-import folder_copier.ui.StringTools;
-import folder_copier.ui.listeners.FileCopyPropertyChangeListener;
 import folder_copier.ui.models.FileCounters;
 
 /**
  * An asynchronous task that copies files in order from one
  * directory to another and updates the progress in the GUI.
  */
-public class FileCopyTask extends ErrorAwareSwingWorker<Void, Void> {
+public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
 
 	private final File sourceDirectory;
 	private final File destinationDirectory;
@@ -100,7 +98,7 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, Void> {
 			}
 			this.fileCounters = new FileCounters(this.countFilesRecursively(this.sourceDirectory), totalFilesInDestination);
 			this.statusNote.setText(
-				FileCopyPropertyChangeListener.createStatusNoteText(this.fileCounters, this.getProgress())
+				createStatusNoteText(this.fileCounters, this.getProgress())
 			);
 			this.fileCopyResults = new FileCopyResults();
 			this.copyRecursively(this.sourceDirectory, this.destinationDirectory);
@@ -108,9 +106,9 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, Void> {
 			if (this.deleteOrphanInDestination) {
 				this.deleteOrphansRecursively(this.sourceDirectory, this.destinationDirectory);
 			}
-			this.logResults(logger);
+			Tools.logResults(this.fileCopyResults, logger);
 			logger.println("Files or folders that have been deleted from the destination folder:");
-			Tools.logFilesAndDirectories(logger, deletedFilesInDestination);
+			Tools.logFilesAndDirectories(deletedFilesInDestination, logger);
 		} catch (FileManagementException e) {
 			this.publishError(e.getMessage());
 		} catch (FileSystemException e) {
@@ -165,34 +163,50 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, Void> {
         	this.statusNote.setText(
         		"File copy has been completed.\n" +
         		"Total files in source folder: " + this.fileCounters.getNumberOfTotalFilesInSource() + ".\n" +
-        		this.printResults() +
-        		deletedPart
+        		Tools.printResults(this.fileCopyResults) + deletedPart
         	);
         }
     }
     
-    private String printResults() {
-    	StringBuilder builder = new StringBuilder();
-    	int count;
-    	for (FileCopyAction value : FileCopyAction.values()) {
-    		count = this.fileCopyResults.getNumberOfOccurrences(value);
-    		builder.append(StringTools.printResult(value, count));
-    	}
-    	return builder.toString();
-    }
-	
-    private void logResult(Logger logger, FileCopyAction action) {
-    	PathCollection affectedFiles;
-		logger.println(StringTools.printResultTitle(action));
-		affectedFiles = this.fileCopyResults.getAffectedFiles(action);
-		Tools.logFiles(logger, affectedFiles);
-		logger.println("");
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void process(List<FileCounters> chunks) {
+    	FileCounters fileCounters = chunks.get(chunks.size() - 1);
+    	this.statusNote.setText(createStatusNoteText(fileCounters, this.getProgress()));
     }
     
-    private void logResults(Logger logger) {
-    	this.logResult(logger, FileCopyAction.COPIED_WITH_NO_CONFLICT);
-    	this.logResult(logger, FileCopyAction.OVERWRITTEN);
+    private void publishAll(int progress) {
+    	this.publish(this.fileCounters);
+    	this.setProgress(progress);
     }
+    
+	/**
+	 * Creates the status note text.
+	 * @param fileCounters The counters for the ongoing file operations.
+	 * @param progress Progress 0 - 100.
+	 * @return The status note text.
+	 */
+	private static String createStatusNoteText(FileCounters fileCounters, int progress) {
+		StringBuilder result = new StringBuilder();
+		if (fileCounters.getNumberOfTotalFilesInSource() > 0) {
+			result.append(
+				"Copied " +
+				fileCounters.getNumberOfProcessedFilesInSource() + "/" + fileCounters.getNumberOfTotalFilesInSource() +
+				" files from source folder.\n"
+			);
+		}
+		if (fileCounters.getNumberOfTotalFilesInDestination() > 0) {
+			result.append(
+				"Processed " +
+				fileCounters.getNumberOfProcessedFilesInDestination() + "/" + fileCounters.getNumberOfTotalFilesInDestination() +
+				" files in destination folder.\n"
+			);
+		}
+		result.append("Completed " + progress + "% of task.");
+		return result.toString();
+	}
     
 	private int countFilesRecursively(File directory) {
 		Iterator<File> children = FileManager.getChildren(directory).iterator();
@@ -240,7 +254,7 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, Void> {
     			FileCopyResult result = this.fileManagement.copyFileToDirectory(sourceSubdirectoryChild, destinationSubdirectory);
     			this.fileCopyResults.add(result);
     			this.fileCounters.addProcessedFilesInSource(1);
-    			this.setProgress(this.calculateCopyProgress());
+    			this.publishAll(this.calculateCopyProgress());
     		} else {
     			File destinationSubdirectoryChild = new File(destinationSubdirectory, sourceSubdirectoryChild.getName());
 				if (FileManager.createDirectoryIfNotExists(destinationSubdirectoryChild)) {
@@ -252,7 +266,7 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, Void> {
 					for (Path file : files) {
 						this.fileCopyResults.add(new FileCopyResult(file, FileCopyAction.SKIPPED));
 					}
-					this.setProgress(this.calculateCopyProgress());
+					this.publishAll(this.calculateCopyProgress());
 				}
     		}
     	}
@@ -278,7 +292,7 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, Void> {
 					destinationSubdirectoryChild.delete();
 				}
 				this.fileCounters.addProcessedFilesInDestination(1);
-				this.setProgress(calculateDeleteOrphansProgress());
+				this.publishAll(calculateDeleteOrphansProgress());
 			} else {
 				if (sourceSubdirectoryChild.isFile() || !sourceSubdirectoryChild.exists()) {
 					List<Path> files = this.getFilesRecursively(destinationSubdirectoryChild);
@@ -291,7 +305,7 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, Void> {
 						this.deletedFilesInDestination.addPath(destinationSubdirectoryChild.toPath());
 					}
 					FileUtils.deleteDirectory(destinationSubdirectoryChild);
-					this.setProgress(calculateDeleteOrphansProgress());
+					this.publishAll(calculateDeleteOrphansProgress());
 				} else {
 					this.deleteOrphansRecursively(sourceSubdirectoryChild, destinationSubdirectoryChild);
 				}

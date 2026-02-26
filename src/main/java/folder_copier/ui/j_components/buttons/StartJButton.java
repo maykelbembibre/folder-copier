@@ -66,9 +66,7 @@ public class StartJButton extends JButton {
 			        	sourceDirectory, destinationDirectory, taskOutput, sensitiveComponents, stopButton,
 			        	appWindow.getConflictingFileOption(), appWindow.deleteOrphanInDestination()
 			        );
-			        PropertyChangeListener propertyChangeListener = new FileCopyPropertyChangeListener(
-		            	progressBar, taskOutput, task
-		            );
+			        PropertyChangeListener propertyChangeListener = new FileCopyPropertyChangeListener(progressBar);
 			        task.addPropertyChangeListener(propertyChangeListener);
 			        appWindow.setTask(task);
 			        taskOutput.setText("Calculating data...");
