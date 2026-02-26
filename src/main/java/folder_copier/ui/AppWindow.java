@@ -31,6 +31,7 @@ import folder_copier.ui.j_components.PropertyBackedJCheckBox;
 import folder_copier.ui.j_components.StatusAwareFileJTextField;
 import folder_copier.ui.j_panels.FileCopyJPanel;
 import folder_copier.ui.j_panels.FileCopyOptionJPanel;
+import folder_copier.ui.j_panels.OtherOptionsJPanel;
 import folder_copier.ui.j_panels.StatusJPanel;
 import folder_copier.ui.models.Status;
 import folder_copier.ui.workers.FileCopyTask;
@@ -43,7 +44,7 @@ public class AppWindow extends JFrame {
 	private static final long serialVersionUID = 2516782550252442192L;
 
 	public static final String APP_NAME = "Folder copier";
-	public final static int GAP = 10;
+	public final static int GAP = 8;
 	
 	private final PropertyManager properties;
 	private final JPanel contentPane;
@@ -71,7 +72,7 @@ public class AppWindow extends JFrame {
 		
 		//Set up the window.
 	    this.setTitle(APP_NAME);
-	    this.setMinimumSize(new Dimension(450, 350));
+	    this.setMinimumSize(new Dimension(490, 450));
 	    this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	
 	    //Create the menu bar.
@@ -86,6 +87,7 @@ public class AppWindow extends JFrame {
 	    this.setJMenuBar(menuBar);
 	    
 	    this.drawContentPane();
+	    this.updateStatus();
 	
 	    //Display the window.
 	    this.pack();
@@ -228,28 +230,29 @@ public class AppWindow extends JFrame {
 		
 		this.fileCopyOptionPanel = new FileCopyOptionJPanel(this.properties);
 		// Necessary so the components in the vertical panel align horizontally the same way.
-		this.fileCopyOptionPanel.setAlignmentX(LEFT_ALIGNMENT);
-		this.fileCopyOptionPanel.setBorder(BorderFactory.createEmptyBorder(GAP, GAP, GAP, GAP));
-		verticalPanel.add(this.fileCopyOptionPanel);
-		verticalPanel.add(new HorizontalSeparator());
+		this.fileCopyOptionPanel.setAlignmentY(TOP_ALIGNMENT);
 		
-		JPanel otherOptionsJPanel = new JPanel();
-		otherOptionsJPanel.setLayout(new BoxLayout(otherOptionsJPanel, BoxLayout.Y_AXIS));
-		otherOptionsJPanel.add(new JLabel("Other options"));
-		otherOptionsJPanel.add(this.deleteOrphanInDestinationJCheckBox);
-		otherOptionsJPanel.setBorder(BorderFactory.createEmptyBorder(GAP, GAP, GAP, GAP));
-		verticalPanel.add(otherOptionsJPanel);
+		JPanel otherOptionsJPanel = new OtherOptionsJPanel(this.deleteOrphanInDestinationJCheckBox);
+		otherOptionsJPanel.setAlignmentY(TOP_ALIGNMENT);
+		otherOptionsJPanel.setBorder(BorderFactory.createEmptyBorder(0, GAP, 0, 0));
+		
+        JPanel allOptionsJPanel = new JPanel();
+        allOptionsJPanel.setAlignmentX(LEFT_ALIGNMENT);
+        allOptionsJPanel.setLayout(new BoxLayout(allOptionsJPanel, BoxLayout.X_AXIS));
+        allOptionsJPanel.setBorder(BorderFactory.createEmptyBorder(GAP, GAP, GAP, GAP));
+        allOptionsJPanel.add(this.fileCopyOptionPanel);
+        allOptionsJPanel.add(otherOptionsJPanel);
+        verticalPanel.add(allOptionsJPanel);
         verticalPanel.add(new HorizontalSeparator());
-		
+        
 		JPanel fileCopyPanel = new FileCopyJPanel(this);
 		// Necessary so the components in the vertical panel align horizontally the same way.
 		fileCopyPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-		
 		verticalPanel.add(fileCopyPanel);
+		
 		this.contentPane.add(verticalPanel, BorderLayout.CENTER);
 		
 		this.statusPanel = new StatusJPanel();
-		this.updateStatus();
 		this.contentPane.add(this.statusPanel, BorderLayout.SOUTH);
 	}
 }
