@@ -146,7 +146,7 @@ public class FileManager {
 	 * Deletes the directory if it is empty.
 	 * @param directory A directory.
 	 */
-	public static void deleteIfEmpty(File directory) {
+	public static void deleteDirectoryIfEmpty(File directory) {
 		File[] files = directory.listFiles();
 		if (files != null && files.length < 1) {
 			directory.delete();

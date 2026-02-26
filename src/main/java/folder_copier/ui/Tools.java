@@ -12,7 +12,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 
 import folder_copier.ui.j_components.ReadOnlyJTextArea;
-import folder_copier.ui.panels.StatusJPanel;
+import folder_copier.ui.j_panels.StatusJPanel;
 
 /**
  * General UI tools.

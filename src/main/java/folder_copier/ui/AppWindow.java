@@ -29,10 +29,10 @@ import folder_copier.ui.j_components.FileJTextField;
 import folder_copier.ui.j_components.HorizontalSeparator;
 import folder_copier.ui.j_components.PropertyBackedJCheckBox;
 import folder_copier.ui.j_components.StatusAwareFileJTextField;
+import folder_copier.ui.j_panels.FileCopyJPanel;
+import folder_copier.ui.j_panels.FileCopyOptionJPanel;
+import folder_copier.ui.j_panels.StatusJPanel;
 import folder_copier.ui.models.Status;
-import folder_copier.ui.panels.FileCopyJPanel;
-import folder_copier.ui.panels.FileCopyOptionJPanel;
-import folder_copier.ui.panels.StatusJPanel;
 import folder_copier.ui.workers.FileCopyTask;
 
 /**

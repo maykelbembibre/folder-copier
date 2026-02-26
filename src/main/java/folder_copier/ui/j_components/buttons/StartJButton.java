@@ -71,6 +71,7 @@ public class StartJButton extends JButton {
 		            );
 			        task.addPropertyChangeListener(propertyChangeListener);
 			        appWindow.setTask(task);
+			        taskOutput.setText("Calculating data...");
 			        task.execute();
 			        
 			        // After a task starts, the user has the possibility of stopping it.

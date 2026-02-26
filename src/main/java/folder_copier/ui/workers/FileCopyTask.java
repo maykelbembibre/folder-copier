@@ -93,7 +93,6 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
     	try {
     		this.setProgress(0);
     		logger = new Logger(AppWindow.APP_NAME);
-    		this.statusNote.setText("Calculating data...");
 			FileManager.checkDirectories(sourceDirectory, destinationDirectory);
 			int totalFilesInDestination;
 			if (this.deleteOrphanInDestination) {
@@ -228,7 +227,7 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
 	
 	private int calculateCopyProgress() {
 		return Math.min(
-			this.fileCounters.getNumberOfCopiedFilesInSource() * this.copyFileProgressThreshold / this.fileCounters.getNumberOfTotalFilesInSource(),
+			this.fileCounters.getNumberOfProcessedFilesInSource() * this.copyFileProgressThreshold / this.fileCounters.getNumberOfTotalFilesInSource(),
 			this.copyFileProgressThreshold
 		);
 	}
@@ -241,7 +240,7 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
     		if (sourceSubdirectoryChild.isFile()) {
     			FileCopyResult result = this.fileManagement.copyFileToDirectory(sourceSubdirectoryChild, destinationSubdirectory);
     			this.fileCopyResults.add(result);
-    			this.fileCounters.addCopiedFilesInSource(1);
+    			this.fileCounters.addProcessedFilesInSource(1);
     			this.setProgress(this.calculateCopyProgress());
     		} else {
     			File destinationSubdirectoryChild = new File(destinationSubdirectory, sourceSubdirectoryChild.getName());
@@ -250,7 +249,7 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
 				} else {
 					List<Path> files = this.getFilesRecursively(sourceSubdirectoryChild);
 					int fileCount = files.size();
-					this.fileCounters.addCopiedFilesInSource(fileCount);
+					this.fileCounters.addProcessedFilesInSource(fileCount);
 					for (Path file : files) {
 						this.fileCopyResults.add(new FileCopyResult(file, FileCopyAction.SKIPPED));
 					}

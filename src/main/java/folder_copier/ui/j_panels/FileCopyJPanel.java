@@ -1,4 +1,4 @@
-package folder_copier.ui.panels;
+package folder_copier.ui.j_panels;
 
 import java.awt.Dimension;
 import java.awt.Insets;

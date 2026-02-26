@@ -19,6 +19,7 @@ public class FileOrderManager {
 	
 	/**
 	 * Gets the children of the given directory, ordered lexicographically.
+	 * Directories always go first and files go later.
 	 * @param directory A directory.
 	 * @return The list of ordered children.
 	 */

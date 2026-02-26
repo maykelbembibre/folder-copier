@@ -1,4 +1,4 @@
-package folder_copier.ui.panels;
+package folder_copier.ui.j_panels;
 
 import java.util.Arrays;
 import java.util.Collection;

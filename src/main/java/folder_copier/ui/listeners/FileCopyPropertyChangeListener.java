@@ -44,7 +44,7 @@ public class FileCopyPropertyChangeListener implements PropertyChangeListener {
 		if (fileCounters.getNumberOfTotalFilesInSource() > 0) {
 			result.append(
 				"Copied " +
-				fileCounters.getNumberOfCopiedFilesInSource() + "/" + fileCounters.getNumberOfTotalFilesInSource() +
+				fileCounters.getNumberOfProcessedFilesInSource() + "/" + fileCounters.getNumberOfTotalFilesInSource() +
 				" files from source folder.\n"
 			);
 		}

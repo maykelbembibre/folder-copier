@@ -5,7 +5,7 @@ package folder_copier.ui.models;
  */
 public class FileCounters {
 	
-	private volatile int copiedFilesInSource;
+	private volatile int processedFilesInSource;
 	private final int totalFilesInSource;
 	private volatile int processedFilesInDestination;
 	private final int totalFilesInDestination;
@@ -24,21 +24,21 @@ public class FileCounters {
 
 	/**
 	 * Returns the number of files in the source directory that have
-	 * already been copied.
+	 * already been processed.
 	 * @return The number of files in the source directory that have
-	 * already been copied.
+	 * already been processed.
 	 */
-	public int getNumberOfCopiedFilesInSource() {
-		return copiedFilesInSource;
+	public int getNumberOfProcessedFilesInSource() {
+		return processedFilesInSource;
 	}
 
 	/**
 	 * Adds to the number of files in the source directory that have
-	 * already been copied.
+	 * already been processed.
 	 * @param filesToAdd The number of files to add.
 	 */
-	public void addCopiedFilesInSource(int filesToAdd) {
-		this.copiedFilesInSource += filesToAdd;
+	public void addProcessedFilesInSource(int filesToAdd) {
+		this.processedFilesInSource += filesToAdd;
 	}
 
 	/**
