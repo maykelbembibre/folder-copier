@@ -25,10 +25,7 @@ public class Tools {
 		if (fileCollection.isEmpty()) {
 			logger.println("No files.");
 		}
-		for (Path path : fileCollection.getDirectoryPaths()) {
-			logger.println(path.toString());
-		}
-		for (Path path : fileCollection.getFilePaths()) {
+		for (Path path : fileCollection.getAllPaths()) {
 			logger.println(path.toString());
 		}
 	}

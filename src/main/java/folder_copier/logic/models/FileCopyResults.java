@@ -1,5 +1,7 @@
 package folder_copier.logic.models;
 
+import java.nio.file.Path;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,5 +48,16 @@ public class FileCopyResults {
 			this.results.put(action, pathCollection);
 		}
 		pathCollection.addPath(result.getAffectedFilePath());
+	}
+	
+	/**
+	 * Adds many instances of the same action for all the given files.
+	 * @param files The files.
+	 * @param result The action.
+	 */
+	public void addMany(Collection<Path> files, FileCopyAction action) {
+		for (Path file : files) {
+			this.add(new FileCopyResult(file, action));
+		}
 	}
 }

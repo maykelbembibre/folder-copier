@@ -3,16 +3,17 @@ package folder_copier.logic.models;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
- * Class that represents a collection of absolute paths that start in a
- * specific directory.
+ * Class that represents a collection of absolute paths.
  */
 public class PathCollection {
 
 	private final List<Path> filePaths = new ArrayList<>();
 	private final List<Path> directoryPaths = new ArrayList<>();
+	private final List<Path> allPaths = new ArrayList<>();
 	
 	/**
 	 * Adds an absolute path to this file collection.
@@ -23,6 +24,17 @@ public class PathCollection {
 			this.filePaths.add(absolutePath);
 		} else if (file.isDirectory()) {
 			this.directoryPaths.add(absolutePath);
+		}
+		this.allPaths.add(absolutePath);
+	}
+	
+	/**
+	 * Adds the given paths to this path collection.
+	 * @param absolutePaths The absolute paths.
+	 */
+	public void addPaths(Collection<Path> absolutePaths) {
+		for (Path absolutePath : absolutePaths) {
+			this.addPath(absolutePath);
 		}
 	}
 	
@@ -48,6 +60,15 @@ public class PathCollection {
 	 */
 	public List<Path> getDirectoryPaths() {
 		return directoryPaths;
+	}
+	
+	/**
+	 * Returns all paths both of files and directories, in the order
+	 * they were added.
+	 * @return All the paths.
+	 */
+	public List<Path> getAllPaths() {
+		return this.allPaths;
 	}
 	
 	@Override
