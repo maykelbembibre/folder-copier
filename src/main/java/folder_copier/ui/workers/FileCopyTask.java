@@ -12,7 +12,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.JTextArea;
-import javax.swing.SwingWorker;
 
 import org.apache.commons.io.FileUtils;
 
@@ -34,7 +33,7 @@ import folder_copier.ui.models.FileCounters;
  * An asynchronous task that copies files in order from one
  * directory to another and updates the progress in the GUI.
  */
-public class FileCopyTask extends SwingWorker<Void, Void> {
+public class FileCopyTask extends ErrorAwareSwingWorker<Void, Void> {
 
 	private final File sourceDirectory;
 	private final File destinationDirectory;
@@ -45,7 +44,6 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
 	private final boolean deleteOrphanInDestination;
 	private final int copyFileProgressThreshold;
 	private final FileManager fileManagement;
-	private String error;
 	private FileCounters fileCounters;
 	private FileCopyResults fileCopyResults;
 	private PathCollection deletedFilesInDestination;
@@ -114,12 +112,12 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
 			logger.println("Files or folders that have been deleted from the destination folder:");
 			Tools.logFilesAndDirectories(logger, deletedFilesInDestination);
 		} catch (FileManagementException e) {
-			this.error(e.getMessage());
+			this.publishError(e.getMessage());
 		} catch (FileSystemException e) {
-			this.error("It looks like an external storage device has been removed. The operation can't go on.");
+			this.publishError("It looks like an external storage device has been removed. The operation can't go on.");
 		} catch (IOException e) {
 			e.printStackTrace();
-			this.error("OS file system error.");
+			this.publishError("OS file system error.");
 		} finally {
 			try {
 				logger.close();
@@ -152,8 +150,9 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
         // When a task ends, it can't be stopped anymore.
         this.stopButton.setEnabled(false);
         
-        if (this.error != null) {
-        	this.statusNote.setText("Error: " + this.error);
+        String error = this.getError();
+        if (error != null) {
+        	this.statusNote.setText("Error: " + error);
         } else if (this.isCancelled()) {
         	this.statusNote.setText("Task cancelled.");
         } else {
@@ -261,10 +260,8 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
 	
 	private int calculateDeleteOrphansProgress() {
 		return Math.min(
-			this.copyFileProgressThreshold +
-			this.fileCounters.getNumberOfProcessedFilesInDestination() *
-			(100 - this.copyFileProgressThreshold) /
-			this.fileCounters.getNumberOfTotalFilesInDestination(),
+			this.copyFileProgressThreshold + this.fileCounters.getNumberOfProcessedFilesInDestination() *
+			(100 - this.copyFileProgressThreshold) / this.fileCounters.getNumberOfTotalFilesInDestination(),
 			100
 		);
 	}
@@ -301,9 +298,4 @@ public class FileCopyTask extends SwingWorker<Void, Void> {
 			}
 		}
 	}
-    
-    private void error(String error) {
-    	this.cancel(true);
-    	this.error = error;
-    }
 }
