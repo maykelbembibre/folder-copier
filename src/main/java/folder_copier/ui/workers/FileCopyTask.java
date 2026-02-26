@@ -39,11 +39,11 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
 	private final Collection<Component> sensitiveComponents;
 	private final Component stopButton;
 	private final ConflictingFileOption conflictingFileOption;
-	private final int copyFileProgressThreshold;
+	private final int progressThreshold;
 	private final FileManager fileManager;
-	private FileCounters fileCounters;
 	private final FileCopyResults fileCopyResults;
 	private final PathCollection deletedFilesInDestination;
+	private FileCounters fileCounters;
 	
 	/**
 	 * Constructor.
@@ -68,15 +68,15 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
     	this.sensitiveComponents = sensitiveComponents;
     	this.stopButton = stopButton;
     	this.conflictingFileOption = conflictingFileOption;
-    	this.fileCopyResults = new FileCopyResults();
     	if (deleteOrphanInDestination) {
-			this.copyFileProgressThreshold = 75;
+			this.progressThreshold = 75;
 			this.deletedFilesInDestination = new PathCollection();
 		} else {
-			this.copyFileProgressThreshold = 100;
+			this.progressThreshold = 100;
 			this.deletedFilesInDestination = null;
 		}
-		this.fileManager = new FileManager(this.conflictingFileOption);
+    	this.fileManager = new FileManager(this.conflictingFileOption);
+    	this.fileCopyResults = new FileCopyResults();
 	}
 
     /**
@@ -100,11 +100,9 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
 			this.fileCounters = new FileCounters(this.countFilesRecursively(this.sourceDirectory), totalFilesInDestination);
 			this.publishAll(0); // Show initial file counts to the user.
 			this.copyRecursively(this.sourceDirectory, this.destinationDirectory);
-			if (this.deletedFilesInDestination != null) {
-				this.deleteRecursively(this.sourceDirectory, this.destinationDirectory);
-			}
 			Tools.logResults(this.fileCopyResults, logger);
 			if (this.deletedFilesInDestination != null) {
+				this.deleteRecursively(this.sourceDirectory, this.destinationDirectory);
 				logger.println("Files or folders that have been deleted from the destination folder:");
 				Tools.logFilesAndDirectories(deletedFilesInDestination, logger);
 			}
@@ -213,8 +211,8 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
 	
 	private int calculateCopyProgress() {
 		return Math.min(
-			this.fileCounters.getNumberOfProcessedFilesInSource() * this.copyFileProgressThreshold / this.fileCounters.getNumberOfTotalFilesInSource(),
-			this.copyFileProgressThreshold
+			this.fileCounters.getNumberOfProcessedFilesInSource() * this.progressThreshold / this.fileCounters.getNumberOfTotalFilesInSource(),
+			this.progressThreshold
 		);
 	}
 	
@@ -246,8 +244,8 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
 	
 	private int calculateDeleteOrphansProgress() {
 		return Math.min(
-			this.copyFileProgressThreshold + this.fileCounters.getNumberOfProcessedFilesInDestination() *
-			(100 - this.copyFileProgressThreshold) / this.fileCounters.getNumberOfTotalFilesInDestination(),
+			this.progressThreshold + this.fileCounters.getNumberOfProcessedFilesInDestination() *
+			(100 - this.progressThreshold) / this.fileCounters.getNumberOfTotalFilesInDestination(),
 			100
 		);
 	}
