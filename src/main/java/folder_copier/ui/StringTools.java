@@ -34,7 +34,7 @@ public class StringTools {
     		if (resultType == null) {
     			message = "";
     		} else {
-    			message = "Files " + resultType + ": " + count + ".\n";
+    			message = "  of which " + resultType + ": " + count + ".\n";
     		}
     	} else {
     		message = "";

@@ -48,11 +48,12 @@ public class OutputText {
 	) {
 		String deletedPart;
     	if (deletedFilesInDestination != null) {
-    		deletedPart = "Files deleted from the destination folder: " + deletedFilesInDestination.getFilePaths().size() + ".";
+    		deletedPart = "  of which deleted: " + deletedFilesInDestination.getFilePaths().size() + ".";
     	} else {
     		deletedPart = "";
     	}
     	return "File copy has been completed.\nTotal files in source folder: " + fileCounters.getNumberOfTotalFilesInSource() +
-    	".\n" + Tools.printResults(fileCopyResults) + deletedPart;
+    	"\n" + Tools.printResults(fileCopyResults) + "Total files in destination folder: " +
+    	fileCounters.getNumberOfTotalFilesInDestination() + "\n" + deletedPart;
 	}
 }
