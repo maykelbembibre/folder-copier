@@ -1,5 +1,6 @@
 package folder_copier.logic;
 
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileWriter;
@@ -48,6 +49,15 @@ public class Logger implements Closeable {
 	public void println(String line) {
 		this.printWriter.println(line);
 	}
+	
+	/**
+	 * Prints the throwable's stacktrace.
+	 * @param throwable A throwable.
+	 */
+	public void printThrowable(Throwable throwable) {
+		throwable.printStackTrace();
+		this.printWriter.println(getStackTrace(throwable));
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -57,6 +67,23 @@ public class Logger implements Closeable {
 		if (this.printWriter != null) {
 			this.printWriter.close();
 		}
+	}
+	
+	/**
+	 * Get the stacktrace of a {@link Throwable}.
+	 * The stacktrace will be returned in the form of a string. 
+	 */
+	private static String getStackTrace(Throwable theException) {
+	    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	    PrintWriter printWriter = new PrintWriter(baos, true);
+	    theException.printStackTrace(printWriter);
+	    String stackTrace = baos.toString();
+	    try {
+	        printWriter.close();
+	        baos.close();
+	    } catch(IOException dontCare) {
+	    }
+	    return stackTrace;
 	}
 	
 	private static File getWorkingDirectory() {

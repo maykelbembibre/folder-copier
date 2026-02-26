@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 
 import folder_copier.logic.exceptions.FileManagementException;
+import folder_copier.logic.exceptions.FileRemovedException;
 import folder_copier.logic.models.ConflictingFileOption;
 import folder_copier.logic.models.FileCopyAction;
 import folder_copier.logic.models.FileCopyResult;
@@ -63,9 +64,14 @@ public class FileManager {
 	 * lexicographically.
 	 * @param directory A directory.
 	 * @return The list of filtered and ordered children.
+	 * @throws FileManagementException If the directory <code>directory</code> is removed while this method is executing.
 	 */
-	public static List<File> getChildren(File directory) {
-		return FileOrderManager.getChildren(directory);
+	public static List<File> getChildren(File directory) throws FileManagementException {
+		try {
+			return FileOrderManager.getChildren(directory);
+		} catch (FileRemovedException e) {
+			throw new FileManagementException("A storage unit has been removed or a file has been deleted while this program was executing.");
+		}
 	}
 	
 	/**

@@ -83,8 +83,8 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
     public Void doInBackground() {
     	Logger logger = null;
     	try {
-    		this.setProgress(0);
     		logger = new Logger(AppWindow.APP_NAME);
+    		this.setProgress(0);
 			FileManager.checkDirectories(sourceDirectory, destinationDirectory);
 			this.indicators = new Indicators(
 				this.countFilesRecursively(this.sourceDirectory), this.countFilesRecursively(this.destinationDirectory)
@@ -100,10 +100,19 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
 		} catch (FileManagementException e) {
 			this.publishError(e.getMessage());
 		} catch (FileSystemException e) {
-			this.publishError("It looks like an external storage device has been removed. The operation can't go on.");
+			this.publishError(e.getMessage());
 		} catch (IOException e) {
-			e.printStackTrace();
-			this.publishError("OS file system error.");
+			this.publishError(e.getMessage());
+		} catch (Exception e) {
+			String message = e.getMessage();
+			String error;
+			if (message == null || message.isEmpty()) {
+				error = "Unknown error.";
+			} else {
+				error = message;
+			}
+			this.publishError(error);
+			logger.printThrowable(e);
 		} finally {
 			try {
 				logger.close();
@@ -154,7 +163,7 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
     	this.setProgress(progress);
     }
     
-	private int countFilesRecursively(File directory) {
+	private int countFilesRecursively(File directory) throws FileManagementException {
 		int count = 0;
 		Iterator<File> children = FileManager.getChildren(directory).iterator();
 		File directoryChild;
@@ -169,7 +178,7 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
 		return count;
 	}
 
-	private List<Path> getFilesRecursively(File directory) {
+	private List<Path> getFilesRecursively(File directory) throws FileManagementException {
 		List<Path> result = new ArrayList<>();
 		Iterator<File> children = FileManager.getChildren(directory).iterator();
 		File directoryChild;
@@ -205,7 +214,7 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
     	}
     }
 
-	private void deleteRecursively(File srcSubdir, File dstSubdir) throws IOException {
+	private void deleteRecursively(File srcSubdir, File dstSubdir) throws IOException, FileManagementException {
 		Iterator<File> dstSubdirChildren = FileManager.getChildren(dstSubdir).iterator();
 		File srcSubdirChild, dstSubdireChild;
 		while (!this.isCancelled() && dstSubdirChildren.hasNext()) {

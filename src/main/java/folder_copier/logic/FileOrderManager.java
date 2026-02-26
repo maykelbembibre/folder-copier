@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import folder_copier.logic.alphanumeric.AlphanumericComparator;
+import folder_copier.logic.exceptions.FileRemovedException;
 import folder_copier.logic.models.ComparableFile;
 
 /**
@@ -22,9 +23,14 @@ public class FileOrderManager {
 	 * Directories always go first and files go later.
 	 * @param directory A directory.
 	 * @return The list of ordered children.
+	 * @throws FileRemovedException If the directory <code>directory</code> is removed while this method is executing.
 	 */
-	public static List<File> getChildren(File directory) {
-		List<ComparableFile> children = order(Arrays.asList(directory.listFiles()));
+	public static List<File> getChildren(File directory) throws FileRemovedException {
+		File[] directoryFiles = directory.listFiles();
+		if (directoryFiles == null) {
+			throw new FileRemovedException();
+		}
+		List<ComparableFile> children = order(Arrays.asList(directoryFiles));
 		List<File> result = new ArrayList<>();
 		for (ComparableFile child : children) {
 			result.add(child.getFile());

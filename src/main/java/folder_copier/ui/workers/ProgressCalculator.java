@@ -25,10 +25,17 @@ public class ProgressCalculator {
 	 * @return The progress.
 	 */
 	public int calculateCopyProgress(FileCounters fileCounters) {
-		return Math.min(
-			fileCounters.getNumberOfProcessedFilesInSource() * this.progressThreshold / fileCounters.getNumberOfTotalFilesInSource(),
-			this.progressThreshold
-		);
+		int result;
+		int divisor = fileCounters.getNumberOfTotalFilesInSource();
+		if (divisor > 0) {
+			result = Math.min(
+				fileCounters.getNumberOfProcessedFilesInSource() * this.progressThreshold / divisor,
+				this.progressThreshold
+			);
+		} else {
+			result = this.progressThreshold;
+		}
+		return result;
 	}
 	
 	/**
@@ -37,11 +44,17 @@ public class ProgressCalculator {
 	 * @return The progress.
 	 */
 	public int calculateDeleteProgress(FileCounters fileCounters) {
-		return Math.min(
-			this.progressThreshold + fileCounters.getNumberOfProcessedFilesInDestination() *
-			(100 - this.progressThreshold) / fileCounters.getNumberOfTotalFilesInDestination(),
-			100
-		);
+		int result;
+		int divisor = fileCounters.getNumberOfTotalFilesInDestination();
+		if (divisor > 0) {
+			result = Math.min(
+				this.progressThreshold + fileCounters.getNumberOfProcessedFilesInDestination() *
+				(100 - this.progressThreshold) / divisor,
+				100
+			);
+		} else {
+			result = 100;
+		}
+		return result;
 	}
-	
 }
