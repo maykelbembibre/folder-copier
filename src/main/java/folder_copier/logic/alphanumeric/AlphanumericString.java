@@ -52,7 +52,7 @@ public class AlphanumericString implements Comparable<AlphanumericString> {
 			Integer bInteger = Integer.valueOf(b);
 			result = aInteger.compareTo(bInteger);
 		} catch (NumberFormatException e) {
-			result = a.compareTo(b);
+			result = a.compareToIgnoreCase(b);
 		}
 		return result;
 	}

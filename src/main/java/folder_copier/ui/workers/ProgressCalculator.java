@@ -1,5 +1,8 @@
 package folder_copier.ui.workers;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 import folder_copier.ui.models.FileCounters;
 
 /**
@@ -26,12 +29,26 @@ public class ProgressCalculator {
 	 */
 	public int calculateCopyProgress(FileCounters fileCounters) {
 		int result;
-		int divisor = fileCounters.getNumberOfTotalFilesInSource();
-		if (divisor > 0) {
+		int numberOfTotalFilesInSource = fileCounters.getNumberOfTotalFilesInSource();
+		if (numberOfTotalFilesInSource > 0) {
 			result = Math.min(
-				fileCounters.getNumberOfProcessedFilesInSource() * this.progressThreshold / divisor,
+				fileCounters.getNumberOfProcessedFilesInSource() * this.progressThreshold / numberOfTotalFilesInSource,
 				this.progressThreshold
 			);
+		} else {
+			result = this.progressThreshold;
+		}
+		return result;
+	}
+	
+	public int calculateCopyProgress(FileCounters fileCounters, BigDecimal currentFileRatio) {
+		int result;
+		int numberOfTotalFilesInSource = fileCounters.getNumberOfTotalFilesInSource();
+		if (numberOfTotalFilesInSource > 0) {
+			BigDecimal processed = new BigDecimal(fileCounters.getNumberOfProcessedFilesInSource()).add(currentFileRatio);
+			BigDecimal threshold = new BigDecimal(this.progressThreshold);
+			BigDecimal total = new BigDecimal(numberOfTotalFilesInSource);
+			result = processed.multiply(threshold).divide(total, 0, RoundingMode.HALF_EVEN).intValue();
 		} else {
 			result = this.progressThreshold;
 		}
@@ -45,11 +62,11 @@ public class ProgressCalculator {
 	 */
 	public int calculateDeleteProgress(FileCounters fileCounters) {
 		int result;
-		int divisor = fileCounters.getNumberOfTotalFilesInDestination();
-		if (divisor > 0) {
+		int numberOfTotalFilesInDestination = fileCounters.getNumberOfTotalFilesInDestination();
+		if (numberOfTotalFilesInDestination > 0) {
 			result = Math.min(
 				this.progressThreshold + fileCounters.getNumberOfProcessedFilesInDestination() *
-				(100 - this.progressThreshold) / divisor,
+				(100 - this.progressThreshold) / numberOfTotalFilesInDestination,
 				100
 			);
 		} else {

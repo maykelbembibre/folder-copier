@@ -4,6 +4,7 @@ import java.awt.Component;
 import java.awt.Toolkit;
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.FileSystemException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -193,13 +194,30 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
 		return result;
 	}
 	
+	private final ProgressAdder PROGRESS_ADDER = new ProgressAdder() {
+		@Override
+		public void addRatio(BigDecimal ratio) {
+			FileCopyTask.this.setProgress(progressCalculator.calculateCopyProgress(indicators.getFileCounters(), ratio));
+		}
+	};
+	
+	private FileCopyResult copyFileToDirectory(File sourceFile, File destinationDirectory) throws IOException {
+		FileCopyResult result;
+		if (this.indicators.getFileCounters().getNumberOfTotalFilesInSource() < 100) {
+			result = this.fileManager.copyFileToDirectory(sourceFile, destinationDirectory, PROGRESS_ADDER);
+		} else {
+			result = this.fileManager.copyFileToDirectory(sourceFile, destinationDirectory);
+		}
+		return result;
+	}
+	
 	private void copyRecursively(File srcSubdir, File dstSubdir) throws IOException, FileManagementException {
 		Iterator<File> srcSubdirChildren = FileManager.getChildren(srcSubdir).iterator();
 		File srcSubdirChild;
 		while (!this.isCancelled() && srcSubdirChildren.hasNext()) {
     		srcSubdirChild = srcSubdirChildren.next();
     		if (srcSubdirChild.isFile()) {
-    			FileCopyResult result = this.fileManager.copyFileToDirectory(srcSubdirChild, dstSubdir);
+    			FileCopyResult result = this.copyFileToDirectory(srcSubdirChild, dstSubdir);//this.fileManager.copyFileToDirectory(srcSubdirChild, dstSubdir);
     			this.indicators.addFileCopyResult(result);
     			this.publishAll(this.progressCalculator.calculateCopyProgress(this.indicators.getFileCounters()));
     		} else {

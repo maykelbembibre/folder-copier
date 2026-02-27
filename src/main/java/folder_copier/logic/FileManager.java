@@ -4,15 +4,18 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Objects;
 
 import folder_copier.logic.exceptions.FileManagementException;
 import folder_copier.logic.exceptions.FileRemovedException;
+import folder_copier.logic.file_copy.EfficientFileCopier;
+import folder_copier.logic.file_copy.FileCopier;
+import folder_copier.logic.file_copy.ProgressableFileCopier;
 import folder_copier.logic.models.ConflictingFileOption;
 import folder_copier.logic.models.FileCopyAction;
 import folder_copier.logic.models.FileCopyResult;
+import folder_copier.ui.workers.ProgressAdder;
 
 /**
  * Logic class for doing the file management operations.
@@ -84,45 +87,11 @@ public class FileManager {
 	 * @throws IOException If something goes wrong.
 	 */
 	public FileCopyResult copyFileToDirectory(File file, File destinationDirectory) throws IOException {
-		Path sourceFilePath = file.toPath();
-		File destinationFile = new File(destinationDirectory, file.getName());
-		Path destinationFilePath = destinationFile.toPath();
-		FileCopyAction action;
-		if (destinationFile.isDirectory()) {
-			action = FileCopyAction.SKIPPED;
-		} else {
-			if (destinationFile.exists()) {
-				long sourceSize = getSize(sourceFilePath);
-				long destinationSize = getSize(destinationFilePath);
-				if (sourceSize > destinationSize) {
-					action = FileCopyAction.OVERWRITTEN;
-				} else {
-					switch (this.option) {
-					case ConflictingFileOption.SKIP:
-						action = FileCopyAction.SKIPPED;
-						break;
-					case ConflictingFileOption.OVERWRITE:
-						action = FileCopyAction.OVERWRITTEN;
-						break;
-					case ConflictingFileOption.OVERWRITE_IF_NEWER:
-						if (file.lastModified() > destinationFile.lastModified()) {
-							action = FileCopyAction.OVERWRITTEN;
-						} else {
-							action = FileCopyAction.SKIPPED;
-						}
-						break;
-					default:
-						throw new IOException("Conflicting file option " + this.option + " is not valid.");
-					}
-				}
-			} else {
-				action = FileCopyAction.COPIED_WITH_NO_CONFLICT;
-			}
-		}
-		if (action.copy()) {
-			Files.copy(sourceFilePath, destinationFilePath, StandardCopyOption.REPLACE_EXISTING);
-		}
-		return new FileCopyResult(destinationFilePath, action);
+		return this.copyFileToDirectory(file, destinationDirectory, new EfficientFileCopier(), null);
+	}
+	
+	public FileCopyResult copyFileToDirectory(File file, File destinationDirectory, ProgressAdder progressable) throws IOException {
+		return this.copyFileToDirectory(file, destinationDirectory, new ProgressableFileCopier(), progressable);
 	}
 	
 	/**
@@ -157,6 +126,51 @@ public class FileManager {
 		if (files != null && files.length < 1) {
 			directory.delete();
 		}
+	}
+	
+	private FileCopyResult copyFileToDirectory(File sourceFile, File destinationDirectory, FileCopier fileCopier, ProgressAdder progressable) throws IOException {
+		Path sourceFilePath = sourceFile.toPath();
+		File destinationFile = new File(destinationDirectory, sourceFile.getName());
+		Path destinationFilePath = destinationFile.toPath();
+		FileCopyAction action;
+		if (destinationFile.isDirectory()) {
+			action = FileCopyAction.SKIPPED;
+		} else {
+			if (destinationFile.exists()) {
+				long sourceSize = getSize(sourceFilePath);
+				long destinationSize = getSize(destinationFilePath);
+				if (sourceSize > destinationSize) {
+					// This may mean that a previous copy of the file was attempted but not
+					// finished and essentially there's a file chunk in the destination,
+					// so best to overwrite with what there's on the source.
+					action = FileCopyAction.OVERWRITTEN;
+				} else {
+					switch (this.option) {
+					case ConflictingFileOption.SKIP:
+						action = FileCopyAction.SKIPPED;
+						break;
+					case ConflictingFileOption.OVERWRITE:
+						action = FileCopyAction.OVERWRITTEN;
+						break;
+					case ConflictingFileOption.OVERWRITE_IF_NEWER:
+						if (sourceFile.lastModified() > destinationFile.lastModified()) {
+							action = FileCopyAction.OVERWRITTEN;
+						} else {
+							action = FileCopyAction.SKIPPED;
+						}
+						break;
+					default:
+						throw new IOException("Conflicting file option " + this.option + " is not valid.");
+					}
+				}
+			} else {
+				action = FileCopyAction.COPIED_WITH_NO_CONFLICT;
+			}
+		}
+		if (action.copy()) {
+			fileCopier.copy(sourceFilePath, destinationFilePath, progressable);
+		}
+		return new FileCopyResult(destinationFilePath, action);
 	}
 	
 	/**
