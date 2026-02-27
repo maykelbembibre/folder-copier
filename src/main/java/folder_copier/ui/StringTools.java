@@ -60,6 +60,9 @@ public class StringTools {
 		case FileCopyAction.OVERWRITTEN:
 			resultType = "overwritten";
 			break;
+		case FileCopyAction.OVERWRITTEN_SUSPECTED_CORRUPTION:
+			resultType = "overwritten because the source version had a bigger size than the destination version";
+			break;
 		default:
 			resultType = null;
 			break;

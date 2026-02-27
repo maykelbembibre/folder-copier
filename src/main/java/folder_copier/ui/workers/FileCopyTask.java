@@ -7,22 +7,25 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.FileSystemException;
 import java.nio.file.Path;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.JTextArea;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import folder_copier.logic.FileManager;
-import folder_copier.logic.Logger;
 import folder_copier.logic.Tools;
 import folder_copier.logic.exceptions.FileManagementException;
 import folder_copier.logic.models.ConflictingFileOption;
 import folder_copier.logic.models.FileCopyResult;
-import folder_copier.ui.AppWindow;
 import folder_copier.ui.models.FileCounters;
 import folder_copier.ui.models.Indicators;
 
@@ -32,6 +35,10 @@ import folder_copier.ui.models.Indicators;
  */
 public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
 
+	private static final Logger LOGGER = LogManager.getLogger(FileCopyTask.class);
+
+	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+	
 	private final File sourceDirectory;
 	private final File destinationDirectory;
 	private final JTextArea statusNote;
@@ -82,9 +89,10 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
      */
     @Override
     public Void doInBackground() {
-    	Logger logger = null;
     	try {
-    		logger = new Logger(AppWindow.APP_NAME);
+    		Date now = new Date();
+    		LOGGER.info("File copy task execution on " + DATE_FORMAT.format(now));
+    		LOGGER.info("");
     		this.setProgress(0);
 			FileManager.checkDirectories(sourceDirectory, destinationDirectory);
 			this.indicators = new Indicators(
@@ -92,12 +100,14 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
 			);
 			this.publishAll(0); // Show initial file counts to the user.
 			this.copyRecursively(this.sourceDirectory, this.destinationDirectory);
-			Tools.logResults(this.indicators.getFileCopyResults(), logger);
+			Tools.logResults(this.indicators.getFileCopyResults());
 			if (this.deleteOrphanInDestination) {
 				this.deleteRecursively(this.sourceDirectory, this.destinationDirectory);
-				logger.println("Files or folders that have been deleted from the destination folder:");
-				Tools.logFilesAndDirectories(this.indicators.getDeletedFilesInDestination(), logger);
+				LOGGER.info("Files or folders that have been deleted from the destination folder:");
+				Tools.logFilesAndDirectories(this.indicators.getDeletedFilesInDestination());
 			}
+			LOGGER.info("");
+			LOGGER.info("");
 		} catch (FileManagementException e) {
 			this.publishError(e.getMessage());
 		} catch (FileSystemException e) {
@@ -113,13 +123,7 @@ public class FileCopyTask extends ErrorAwareSwingWorker<Void, FileCounters> {
 				error = message;
 			}
 			this.publishError(error);
-			logger.printThrowable(e);
-		} finally {
-			try {
-				logger.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			LOGGER.error("There's an error: ", e);
 		}
         return null;
     }

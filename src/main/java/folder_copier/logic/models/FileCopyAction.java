@@ -24,12 +24,18 @@ public enum FileCopyAction {
 	SKIPPED(false),
 	
 	/**
-	 * The file was overwritten because of user preference, because a file
-	 * with the same name and different size existed in the destination
-	 * directory or because a file with the same name and older modification
-	 * date existed in the destination directory.
+	 * The file was overwritten because of user preference or because a file
+	 * with the same name and older modification date existed in the destination
+	 * directory.
 	 */
-	OVERWRITTEN(true);
+	OVERWRITTEN(true),
+	
+	/**
+	 * The file was overwritten because there was a file with the same name in the
+	 * destination but with smaller size, which could mean a previous copy was
+	 * attempted but not finished.
+	 */
+	OVERWRITTEN_SUSPECTED_CORRUPTION(true);
 	
 	private boolean copy;
 	

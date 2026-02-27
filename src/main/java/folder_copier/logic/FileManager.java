@@ -143,7 +143,7 @@ public class FileManager {
 					// This may mean that a previous copy of the file was attempted but not
 					// finished and essentially there's a file chunk in the destination,
 					// so best to overwrite with what there's on the source.
-					action = FileCopyAction.OVERWRITTEN;
+					action = FileCopyAction.OVERWRITTEN_SUSPECTED_CORRUPTION;
 				} else {
 					switch (this.option) {
 					case ConflictingFileOption.SKIP:
