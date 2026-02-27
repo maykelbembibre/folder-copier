@@ -73,7 +73,8 @@ public class AppWindow extends JFrame {
 		//Set up the window.
 	    this.setTitle(APP_NAME);
 	    this.setMinimumSize(new Dimension(490, 450));
-	    this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+	    this.addWindowListener(new AppWindowListener(this));
 	
 	    //Create the menu bar.
 	    JMenuBar menuBar = new JMenuBar();

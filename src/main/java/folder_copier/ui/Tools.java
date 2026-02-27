@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Insets;
+import java.awt.Toolkit;
 import java.net.URL;
 import java.util.Collection;
 
@@ -81,5 +82,15 @@ public class Tools {
 			options[1]
 		);
 		return n == 0;
+	}
+	
+	/**
+	 * Shows an error dialog.
+	 * @param parentComponent The parent component.
+	 * @param message The error message.
+	 */
+	public static void showErrorDialog(Component parentComponent, String message) {
+		Toolkit.getDefaultToolkit().beep();
+		JOptionPane.showMessageDialog(parentComponent, message, "Error", JOptionPane.ERROR_MESSAGE);
 	}
 }
